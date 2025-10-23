@@ -1,0 +1,13 @@
+Agent Factory Project Memo Date: October 21, 2025
+
+Project Goal: The primary objective of the Agent Factory project is to create a sovereign, secure, and scalable ecosystem for designing, deploying, and managing specialized, autonomous AI agents.
+
+Guiding Principle: Our methodology is grounded in a layered, security-first approach. All development must adhere to the "AI Agent Human Firewall Protocol."
+
+Phase 1: Foundation We are currently in Phase 1. This phase involves building the core assets.
+
+Agent 1: The "Toolmaker's Co-Pilot" (COMPLETE) - This agent automates the creation of spec-compliant tools.
+
+Agent 2: The "Knowledge Curator" (IN PROGRESS) - This workflow automates the RAG pipeline.
+
+Next Steps: After the foundation is set, we will proceed to Phase 2: building the Architect "Genesis" Agent, which will be the master agent for building all other agentic crews.
