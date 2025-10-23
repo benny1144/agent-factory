@@ -3,8 +3,8 @@ A private, secure, and scalable ecosystem for designing, deploying, and managing
 Project Status
 Phase 1: Foundational Layer (In Progress)
  * [X] Environment & Governance Setup
- * [ ] Build Agent 1: Toolmaker's Co-Pilot
- * [ ] Build Agent 2: Knowledge Curator
+ * [X] Build Agent 1: Toolmaker's Co-Pilot
+ * [X] Build Agent 2: Knowledge Curator
 Core Principle: Security by Design
 This project formally adopts the AI Agent Human Firewall Protocol as the mandatory framework for all agent and tool development. All components must adhere to these security, reliability, and governance standards.
 See GOVERNANCE.md for details.

@@ -1,0 +1,10 @@
+crewai
+crewai-tools
+langchain-google-genai
+langchain-faiss
+python-dotenv
+
+litellm
+
+google-ai-generativelanguage>=0.7,<1
+google-generativeai>=0.7,<1
