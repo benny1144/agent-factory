@@ -25,7 +25,7 @@ app = FastAPI(title="Agent Factory Governance Console")
 
 # CORS origins aligned with UI (Cloud Run + local dev + custom domain)
 origins = [
-    "https://agent-factory-ui-7s6wp6a3cq-uc.a.run.app",
+    "https://agent-factory-ui-1092120039663.us-central1.run.app",
     "http://localhost:5173",
     "https://dashboard.agent-factory.dev",
 ]
