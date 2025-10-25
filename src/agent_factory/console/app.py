@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 
 from utils.telemetry import TELEMETRY_DIR, summarize_metrics
 from .api import router as compliance_router
@@ -13,8 +13,13 @@ app = FastAPI(title="Agent Factory Governance Console")
 app.include_router(compliance_router, prefix="/api", tags=["compliance"])
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=PlainTextResponse)
 def index() -> str:
+    return "Agent Factory Console Active"
+
+
+@app.get("/console", response_class=HTMLResponse)
+def console_index() -> str:
     summary = summarize_metrics()
     html = "<h1>Governance Console — Agent Factory</h1>"
     html += "<h2>Telemetry Summary</h2><pre>" + json.dumps(summary, indent=2) + "</pre>"
@@ -44,3 +49,9 @@ def get_optimization() -> dict:
     except Exception:
         lines = []
     return {"count": len(lines), "records": lines[-10:]}
+
+
+
+@app.get("/healthz", response_class=PlainTextResponse)
+def healthz() -> str:
+    return "Agent Factory Console Active"

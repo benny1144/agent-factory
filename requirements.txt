@@ -1,3 +1,5 @@
 pytest
 sqlalchemy
 python-dotenv
+fastapi
+uvicorn
