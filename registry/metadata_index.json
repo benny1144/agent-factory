@@ -1,0 +1,151 @@
+[
+  {
+    "id": "001",
+    "title": "Agent Factory Phase 1",
+    "category": "core",
+    "domain": "memory",
+    "file_path": "/core/memory/0_Agent_Factory_Phase_1.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-3403a632d0d4d49b7593fc153314dfebd948748cad0088529fce863f4784c06a",
+    "tags": [
+      "foundation",
+      "procedural_memory",
+      "compliance"
+    ],
+    "summary": "Phase 1 establishes the secure foundation for Agent Factory, including the Compliance Kernel, Cognitive Engine adapters, and initial toolchain setup.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "002",
+    "title": "Agent Factory Roadmap v3.2",
+    "category": "core",
+    "domain": "governance",
+    "file_path": "/core/governance/1_Agent_Factory_Roadmap_v3.2.pdf",
+    "version": "3.2.0",
+    "provenance": "sha256-5c01036b7511dd008edf884a3c371eea774e41b6cf84d50a471bd53cd54ce022",
+    "tags": [
+      "roadmap",
+      "governance",
+      "autonomy"
+    ],
+    "summary": "Comprehensive roadmap outlining Agent Factory’s phased development from governance and security to federated collaboration and ethical drift monitoring.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "003",
+    "title": "The Complete Agent Persona Protocol",
+    "category": "core",
+    "domain": "architecture",
+    "file_path": "/core/architecture/2_The_Complete_Agent_Persona_Protocol.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-f05c6ed1652119f053e583e4d7b615e40fb7f1855188981b239beee1df8823ce",
+    "tags": [
+      "personas",
+      "roles",
+      "agent_design"
+    ],
+    "summary": "Defines archetypal agent personas and governance constraints forming the personality and ethical scaffolding of all Agent Factory agents.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "004",
+    "title": "Agentic Blueprints & Case Studies",
+    "category": "core",
+    "domain": "architecture",
+    "file_path": "/core/architecture/3_Agentic_Blueprints_&_Case_Studies.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-c2d3bc5b7bba9cd6f1bc15f70c3bb3bb33c081cbd16bf6c456b843c18c9f6e02",
+    "tags": [
+      "blueprints",
+      "case_study",
+      "multi_agent"
+    ],
+    "summary": "Architectural foundations and applied case studies illustrating single-agent vs multi-agent systems, cognitive cycles, and enterprise applications.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "005",
+    "title": "AI Agent Communication Protocols Explained",
+    "category": "core",
+    "domain": "communication",
+    "file_path": "/core/communication/4_AI_Agent_Communication_Protocols_Explained.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-17f81feca9283281da09d6363196fd237ee7c3c4c002536010480b1e0513ce65",
+    "tags": [
+      "protocols",
+      "A2A",
+      "MCP",
+      "ANP",
+      "interoperability"
+    ],
+    "summary": "Analyzes foundational and modern inter-agent communication protocols including FIPA-ACL, A2A, MCP, and ACP—the basis for the Protocol Fabric.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "006",
+    "title": "AI Agent Human Firewall Protocol",
+    "category": "core",
+    "domain": "governance",
+    "file_path": "/core/governance/5_AI_Agent_Human_Firewall_Protocol.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-527bb80ee974294bcfcb05c9e5ac371e36c0ac4334692301ba5c75c9120fff53",
+    "tags": [
+      "security",
+      "human_in_loop",
+      "oversight",
+      "risk_tiering"
+    ],
+    "summary": "Introduces the Human Firewall framework for embedding human oversight, dynamic risk control, and ethical verifiability into autonomous AI systems.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "007",
+    "title": "Agent Tooling: Research & Specification",
+    "category": "core",
+    "domain": "engineering",
+    "file_path": "/core/memory/6_Agent_Tooling_Research_&_Specification.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-93887c023bbffb4dd06437767cd94a3c461da20f444c2e9d7a080225575a6d1c",
+    "tags": [
+      "tooling",
+      "specifications",
+      "procedural_memory"
+    ],
+    "summary": "Details the design and specification of agent tooling pipelines, including procedural memory management, validation mechanisms, and audit hooks.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "008",
+    "title": "CrewAI Handbook",
+    "category": "core",
+    "domain": "orchestration",
+    "file_path": "/core/orchestration/7_CrewAI_Handbook.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-b326370daac1e6bafadd7cdc6feb499208df3004142e71a2f7396a9c451cbba4",
+    "tags": [
+      "crewai",
+      "multi_agent",
+      "flows",
+      "hierarchies"
+    ],
+    "summary": "Updated June 2025 guide on CrewAI’s dual Crews/Flows architecture, YAML config standards, and hybrid orchestration patterns.",
+    "last_updated": "2025-10-24"
+  },
+  {
+    "id": "009",
+    "title": "AutoGen Framework Research Report",
+    "category": "core",
+    "domain": "orchestration",
+    "file_path": "/core/orchestration/8_AutoGen_Framework_Research_Report.pdf",
+    "version": "1.0.0",
+    "provenance": "sha256-4675bb59eeeca58f3de382fbb1cba875761ee2e97d6ce1bab73f28fcad073296",
+    "tags": [
+      "autogen",
+      "framework",
+      "orchestration",
+      "determinism"
+    ],
+    "summary": "Technical exploration of the AutoGen/MAF orchestration frameworks for deterministic, controlled agentic workflows complementing CrewAI’s autonomous model.",
+    "last_updated": "2025-10-24"
+  }
+]
