@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { fetchDrift, fetchOptimization } from '../api/client'
+import { fetchDrift, fetchOptimization, getWsUrl } from '../api/client'
 import DriftChart from '../components/DriftChart'
 
 export default function Dashboard() {
@@ -22,11 +22,16 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    // Open telemetry websocket
+    // Open WebSocket to backend echo (/ws) or configured URL
     try {
-      const base: string = (import.meta as any).env?.VITE_API_BASE || window.location.origin
-      const wsUrl = base.replace(/^http/, 'ws').replace(/\/$/, '') + '/api/ws/telemetry'
+      const wsUrl = getWsUrl()
       const ws = new WebSocket(wsUrl)
+      ws.onopen = () => {
+        // eslint-disable-next-line no-console
+        console.log('✅ WebSocket connected')
+        // Send a ping to see echo messages in the UI
+        try { ws.send('ping') } catch {}
+      }
       ws.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data)

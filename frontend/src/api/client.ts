@@ -7,6 +7,14 @@ export const api = axios.create({
   withCredentials: false,
 })
 
+export function getWsUrl(): string {
+  const envUrl = (import.meta as any).env?.VITE_BACKEND_WS_URL
+  if (envUrl) return envUrl as string
+  // Derive from API base or current origin
+  const base: string = (import.meta as any).env?.VITE_API_BASE || window.location.origin
+  return base.replace(/^http/, 'ws').replace(/\/$/, '') + '/ws'
+}
+
 export async function fetchDrift() {
   const { data } = await api.get('/drift')
   return data

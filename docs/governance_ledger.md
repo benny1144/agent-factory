@@ -117,3 +117,11 @@ Commit: <latest_hash>
 Status: VERIFIED
 Summary: Added explicit Dockerfile ensuring npm start binds to $PORT. Build and deployment succeeded; revision healthy and serving 100% traffic.
 Recorded: 2025-10-25
+
+
+## AF-GOV/OGM-2025-Audit09.3.2
+Title: WebSocket Integration & CORS Alignment
+Status: VERIFIED
+Summary: Implemented FastAPI WebSocket route (/ws), aligned CORS origins to Cloud Run UI, local dev, and custom domain; validated live dashboard communication via echo and environment-driven WS URL.
+Verification: WebSocket connected successfully; echo messages observed in browser Network → WS; no CORS errors; backend logs show connection accepted and messages received.
+Recorded: 2025-10-25

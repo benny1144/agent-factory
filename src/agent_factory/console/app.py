@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
@@ -23,10 +23,16 @@ except Exception:  # pragma: no cover
 
 app = FastAPI(title="Agent Factory Governance Console")
 
-# Enable permissive CORS for UI access (restrict in production as needed)
+# CORS origins aligned with UI (Cloud Run + local dev + custom domain)
+origins = [
+    "https://agent-factory-ui-7s6wp6a3cq-uc.a.run.app",
+    "http://localhost:5173",
+    "https://dashboard.agent-factory.dev",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -81,6 +87,21 @@ def get_optimization() -> dict:
         lines = []
     return {"count": len(lines), "records": lines[-10:]}
 
+
+# Simple echo WebSocket for connectivity tests
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    print("[WS] Connection accepted on /ws")
+    try:
+        while True:
+            data = await websocket.receive_text()
+            print(f"[WS] WebSocket message received: {data}")
+            await websocket.send_text(f"Echo: {data}")
+    except WebSocketDisconnect:
+        # client disconnected
+        print("[WS] Client disconnected from /ws")
+        pass
 
 
 @app.get("/healthz", response_class=PlainTextResponse)
