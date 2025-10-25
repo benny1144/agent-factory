@@ -89,3 +89,21 @@ Certification by Architect confirming all systems passed governance verification
 🧠 Agent Factory Expert  
 Architect & Governance Lead  
 **Final Verification:** *October 25, 2025 — OGM v1.0 Certified*
+
+## Addendum 1 — Knowledge Base Archive (KBA) Integration
+
+Date: October 2025  
+Phase Reference: 3.2 (Knowledge Continuity Foundation)
+
+Summary:
+- 9 core governance PDFs integrated under `/knowledge_base/core/`
+- Registry indexed in `metadata_index.json` with SHA256 verification
+- CI workflow `agent-factory-ci.yml` performs automated registry validation
+- Makefile targets `validate-kba` and `audit-kba` enable local/CI verification
+- Audit artifact: `artifacts/kba_validation.log`
+
+Validation:
+- [KBA] Verified 9 entries successfully.
+- [AUDIT] Registry integrity and checksum validation complete.
+
+Governance Ledger Entry: **AF-KBA/OGM-2025-Audit02**

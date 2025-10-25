@@ -47,6 +47,17 @@ jobs:
             exit 1
           fi
 
+      - name: Run KBA Make target
+        run: make validate-kba
+
+      - name: Upload KBA Validation Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kba-audit
+          path: artifacts/kba_validation.log
+          if-no-files-found: warn
+
       - name: Upload AUDIT logs
         if: always()
         uses: actions/upload-artifact@v4
