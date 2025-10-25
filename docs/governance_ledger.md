@@ -90,3 +90,30 @@ Verification:
 - Cloud Run revision healthy and serving traffic at service URL
 
 Recorded: 2025-10-25
+
+## AF-GOV/OGM-2025-Audit09.3
+Title: Phase 9.3 — Integrated Intelligence & Observability Setup
+Commit: <latest_hash>
+Status: IN PROGRESS
+
+Summary:
+- Added GPT assistant API endpoint (/api/gpt/query) [stub]
+- Added telemetry WebSocket stream (/api/ws/telemetry) for live governance events
+- Mounted Prometheus metrics exporter at /metrics with governance counters
+- Integrated UI: Dashboard live events panel; Junie Console GPT query
+- Minimal Bearer auth via OPERATOR_TOKEN for protected routes (OAuth2 planned)
+
+Verification Plan:
+- Test /api/gpt/query returns JSON with "[GPT-5] received query"
+- Test WebSocket streams [AUDIT] heartbeat events
+- Test /metrics exposes governance_events_total
+
+Recorded: 2025-10-25
+
+
+## AF-GOV/OGM-2025-Audit09.2.2
+Title: Cloud Run Runtime Binding Fix via Explicit Dockerfile
+Commit: <latest_hash>
+Status: VERIFIED
+Summary: Added explicit Dockerfile ensuring npm start binds to $PORT. Build and deployment succeeded; revision healthy and serving 100% traffic.
+Recorded: 2025-10-25

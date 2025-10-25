@@ -11,6 +11,16 @@ from utils.telemetry import TELEMETRY_DIR, summarize_metrics
 from .api import router as compliance_router
 from .api_routes import router as ui_router
 
+# New integrated intelligence & observability routers
+from agent_factory.api import gpt_router as gpt_router
+from agent_factory.api import telemetry_router as telemetry_router
+
+# Prometheus metrics exporter
+try:
+    from prometheus_client import make_asgi_app
+except Exception:  # pragma: no cover
+    make_asgi_app = None  # type: ignore
+
 app = FastAPI(title="Agent Factory Governance Console")
 
 # Enable permissive CORS for UI access (restrict in production as needed)
@@ -25,6 +35,13 @@ app.add_middleware(
 app.include_router(compliance_router, prefix="/api", tags=["compliance"])
 # UI/API routes already include "/api/..." in their path definitions
 app.include_router(ui_router)
+# Mount GPT assistant and telemetry websocket routers
+app.include_router(gpt_router)
+app.include_router(telemetry_router)
+
+# Mount Prometheus metrics exporter if available
+if make_asgi_app:
+    app.mount("/metrics", make_asgi_app())
 
 
 @app.get("/", response_class=PlainTextResponse)

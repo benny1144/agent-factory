@@ -83,11 +83,3 @@ async def send_to_junie(task: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-@router.post("/api/gpt/query")
-async def gpt_query(body: Dict[str, Any]) -> Dict[str, Any]:
-    """Placeholder endpoint for future GPT assistant queries.
-
-    Returns a deterministic stub to avoid external calls.
-    """
-    question = str(body.get("question", "")).strip()
-    return {"ok": True, "answer": f"[stub] You asked: {question}", "meta": {"read_only": True}}

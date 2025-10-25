@@ -69,3 +69,21 @@ Notes
   - HTTPS_FALLBACK_PORT=8443
 - Tunnel target (default): https://localhost:443 with --no-tls-verify (see start-tunnel.ps1). If using fallback, target https://localhost:8443 instead.
 - If you prefer a non-privileged port (no admin): set USE_HTTPS=false and PORT=8765 in junie-bridge/.env, then point the tunnel to http://localhost:8765.
+
+
+## Local environment setup (fixes IDE missing-package warnings)
+
+If your IDE shows warnings like "Package pytest/sqlalchemy/fastapi/prometheus-client is not installed," create a project virtual environment and install the repo requirements:
+
+- One-click (cross-platform):
+  - python scripts/setup_venv.py
+  - Then in IntelliJ/PyCharm: File → Settings → Project → Python Interpreter → Add → Existing environment → select .venv/python
+
+- Manual:
+  - python -m venv .venv
+  - .venv\\Scripts\\activate   # Windows PowerShell
+    or
+  - source .venv/bin/activate     # macOS/Linux
+  - pip install -r requirements.txt
+
+Reopen requirements.txt — the warnings should disappear.

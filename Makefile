@@ -1,6 +1,6 @@
 # Agent Factory Makefile
 
-.PHONY: start genesis validate validate-fix validate-kba audit-kba
+.PHONY: start genesis validate validate-fix validate-kba audit-kba setup
 
 start:
 	@python scripts/startup_check.py && python agents/architect_genesis/main.py
@@ -27,3 +27,6 @@ audit-kba:
 	@python -c "import os; os.makedirs('artifacts', exist_ok=True)"
 	@echo "[AUDIT] Running KBA validation..." >> artifacts/kba_validation.log && \
 	python scripts/validate_kba_registry.py --root . --registry registry/metadata_index.json --audit-dir validation/logs >> artifacts/kba_validation.log
+
+setup:
+	@python scripts/setup_venv.py

@@ -51,3 +51,8 @@ export async function sendJunieTask(task: any) {
   const { data } = await api.post('/api/junie', task)
   return data
 }
+
+export async function queryGPT(query: string) {
+  const { data } = await api.post('/api/gpt/query', { query })
+  return data
+}
