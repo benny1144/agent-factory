@@ -41,7 +41,8 @@ jobs:
       - name: Knowledge Base Registry Validation
         run: |
           if [ -f scripts/validate_kba_registry.py ]; then
-            python scripts/validate_kba_registry.py --root . --registry registry/metadata_index.json --audit-dir validation/logs
+            mkdir -p artifacts
+            python scripts/validate_kba_registry.py --root . --registry registry/metadata_index.json --audit-dir validation/logs > artifacts/kba_validation.log
           else
             echo "scripts/validate_kba_registry.py not found; please add validator."
             exit 1
