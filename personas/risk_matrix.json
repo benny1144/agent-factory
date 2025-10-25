@@ -1,0 +1,5 @@
+{
+  "Architect": { "default": "HOTL", "high_risk": "HITL" },
+  "Toolmaker": { "default": "HOOTL", "high_risk": "HOTL" },
+  "Researcher": { "default": "HOTL", "high_risk": "HITL" }
+}

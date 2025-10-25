@@ -1,0 +1,44 @@
+name: Phase 2 Validation CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install pytest sqlalchemy python-dotenv
+
+      - name: Run tests
+        run: |
+          mkdir -p artifacts
+          set -o pipefail
+          pytest -q | tee artifacts/pytest_output.log
+
+      - name: Validate Phase 2 schema and provenance
+        run: python scripts/validate_phase2.py
+
+      - name: Collect [AUDIT] logs
+        run: |
+          mkdir -p artifacts
+          find . -type f -name "*.log" -exec grep "\[AUDIT\]" {} \; > artifacts/audit_sample.log || true
+        continue-on-error: true
+
+      - name: Upload audit artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-logs
+          path: artifacts/

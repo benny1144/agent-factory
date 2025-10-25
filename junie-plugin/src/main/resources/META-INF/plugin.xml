@@ -1,0 +1,11 @@
+<idea-plugin>
+  <id>org.jetbrains.junie.bridge-sync</id>
+  <name>Junie Bridge Sync</name>
+  <vendor>Local</vendor>
+  <description>Automated Junie↔Bridge integration: polls local Bridge, auto-opens Junie tool window, routes messages.</description>
+
+  <depends>com.intellij.modules.platform</depends>
+
+  <applicationService serviceImplementation="org.jetbrains.junie.bridge.JunieBridgeAppSettings"/>
+  <projectService serviceImplementation="org.jetbrains.junie.bridge.JunieBridgeService"/>
+</idea-plugin>

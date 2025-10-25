@@ -1,8 +1,19 @@
 import os
+import re
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser  # <-- We add an output parser
+
+# Add src path for utilities and audit
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(PROJECT_ROOT / "src"))
+
+from agent_factory.services.audit.audit_logger import log_tool_creation
+from utils.paths import TOOLS_DIR, TESTS_DIR, PERSONAS_DIR
+from utils.procedural_memory_pg import register_tool
 
 def main():
     """
@@ -17,11 +28,11 @@ def main():
 
     # Load the agent's persona from the markdown file
     try:
-        with open("../../personas/toolmaker_copilot.md", "r") as f:
+        persona_path = PERSONAS_DIR / "toolmaker_copilot.md"
+        with open(persona_path, "r", encoding="utf-8") as f:
             persona = f.read()
     except FileNotFoundError:
-        print("Error: The persona file 'personas/toolmaker_copilot.md' was not found.")
-        print("Please ensure you are in the 'agents/toolmaker_copilot' directory.")
+        print(f"Error: The persona file '{persona_path}' was not found.")
         return
 
     # --- 2. Prompt Engineering ---
@@ -80,6 +91,54 @@ def main():
     # --- 6. Display the Result ---
     print("\n--- Generated Tool Code ---")
     print(response)
+
+    # --- 7. Parse code block and save tool ---
+    code_match = re.search(r"```(?:python)?\n(.*?)```", response, re.DOTALL)
+    if not code_match:
+        print("[Toolmaker] No Python code block found in response. Aborting save.")
+        return
+    code_str = code_match.group(1).strip()
+
+    tool_filename = f"{tool_name}.py"
+    TOOLS_DIR.mkdir(parents=True, exist_ok=True)
+    tool_path = TOOLS_DIR / tool_filename
+    tool_path.write_text(code_str, encoding="utf-8")
+    print(f"[Toolmaker] Saved tool to {tool_path}")
+
+    # Try to extract schema JSON block if present
+    schema = None
+    schema_match = re.search(r"```json\n(\{[\s\S]*?\})\n```", response)
+    if schema_match:
+        try:
+            import json
+            schema = json.loads(schema_match.group(1))
+        except Exception:
+            schema = None
+    else:
+        try:
+            from agent_factory.services.audit.audit_logger import log_event
+            log_event("tool_schema_missing", {"tool_name": tool_name})
+        except Exception:
+            pass
+
+    # --- 8. Audit log and DB register ---
+    log_tool_creation(tool_name, {"path": str(tool_path)})
+    try:
+        register_tool(tool_name, path=tool_path, schema=schema)
+    except Exception as e:
+        print(f"[Toolmaker] Warning: failed to register tool in DB: {e}")
+
+    # --- 9. Auto-generate a basic test ---
+    TESTS_DIR.mkdir(parents=True, exist_ok=True)
+    test_file = TESTS_DIR / f"test_{tool_name}.py"
+    if not test_file.exists():
+        test_file.write_text(
+            f"from importlib.machinery import SourceFileLoader\n\n"
+            f"mod = SourceFileLoader('{tool_name}', r'{tool_path}').load_module()\n\n"
+            f"def test_module_loads():\n    assert hasattr(mod, '__doc__')\n",
+            encoding="utf-8",
+        )
+        print(f"[Toolmaker] Generated test at {test_file}")
 
 if __name__ == "__main__":
     main()

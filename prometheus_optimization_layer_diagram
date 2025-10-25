@@ -1,0 +1,66 @@
+┌────────────────────────────────────────────────────────────┐
+│                        Agent Factory                       │
+│                 (CrewAI / AutoGen Ecosystem)               │
+└────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+        ┌────────────────────┐
+        │ Agent Personas     │
+        │  (Architect, etc.) │
+        └────────┬───────────┘
+                 │ persona + intent
+                 ▼
+      ┌──────────────────────────┐
+      │ Firewall Protocol        │
+      │  ├─ require_risk()      │
+      │  ├─ load_persona_risk() │
+      └──────────┬──────────────┘
+                 │ risk decision
+                 ▼
+     ┌───────────────────────────┐
+     │ Action Execution Layer    │
+     │  (MemoryEngine / Tools)   │
+     └──────────┬────────────────┘
+                │ emits
+                ▼
+      ┌───────────────────────────┐
+      │ Procedural Memory v3      │
+      │  ├─ agent_runs            │
+      │  ├─ memory_events         │
+      │  ├─ memory_weights        │
+      │  └─ knowledge_ingest      │
+      └──────────┬────────────────┘
+                 │ writes
+                 ▼
+       ┌──────────────────────────┐
+       │ Telemetry Engine         │
+       │  (utils/telemetry.py)    │
+       │  ├─ log_metric()         │
+       │  ├─ summarize_metrics()  │
+       └──────────┬───────────────┘
+                  │ metrics JSONL
+                  ▼
+        ┌─────────────────────────────┐
+        │ Ethical Drift Monitor       │
+        │ (monitoring/ethical_drift)  │
+        │  ├─ load_baseline()         │
+        │  ├─ compute_drift()         │
+        │  ├─ log_metric("drift")     │
+        └──────────┬──────────────────┘
+                   │ drift event
+                   ▼
+         ┌────────────────────────────┐
+         │ Compliance & Audit Kernel  │
+         │ (OpenTelemetry → GCP Logs) │
+         │  ├─ [AUDIT] Events         │
+         │  ├─ [DRIFT] Alerts         │
+         │  └─ [RISK] Escalations     │
+         └──────────┬─────────────────┘
+                    │ summarized daily
+                    ▼
+         ┌────────────────────────────┐
+         │ Governance Console (HITL)  │
+         │  ├─ Reviews drift reports  │
+         │  ├─ Adjusts thresholds     │
+         │  ├─ Approves escalations   │
+         └────────────────────────────┘
