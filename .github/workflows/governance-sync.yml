@@ -41,4 +41,5 @@ jobs:
           path: |
             artifacts/governance_report_*.md
             artifacts/audit_digest_*.json
+            artifacts/kba_validation.log
           if-no-files-found: warn

@@ -125,3 +125,10 @@ Status: VERIFIED
 Summary: Implemented FastAPI WebSocket route (/ws), aligned CORS origins to Cloud Run UI, local dev, and custom domain; validated live dashboard communication via echo and environment-driven WS URL.
 Verification: WebSocket connected successfully; echo messages observed in browser Network → WS; no CORS errors; backend logs show connection accepted and messages received.
 Recorded: 2025-10-25
+
+## AF-GOV/OGM-2025-Audit09.3.3
+Title: Phase 9.3 — Governance Console Backend Deployment and Full Integration
+Status: VERIFIED
+Summary: Backend Cloud Run service deployed and connected to UI; WebSocket stream active; governance events propagating end-to-end with HITL logs and metrics.
+Verification: Console dashboard interactive, no CORS errors; /healthz 200; /drift and /optimization return JSON; /ws echo works; /api/ws/telemetry streams; Cloud Logs show [HITL], [AUDIT], [RETRAIN]; CI green.
+Recorded: 2025-10-25
