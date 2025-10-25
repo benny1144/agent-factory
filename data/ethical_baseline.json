@@ -1,0 +1,7 @@
+{
+  "updated": "2025-10-25T04:24:22.742423+00:00",
+  "source_log": "C:\\Users\\benny\\IdeaProjects\\agent-factory\\artifacts\\hitl_actions.jsonl",
+  "approved_count": 1,
+  "avg_drift": null,
+  "threshold": 0.35
+}
