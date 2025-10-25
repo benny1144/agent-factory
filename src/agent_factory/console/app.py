@@ -4,13 +4,27 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
 from utils.telemetry import TELEMETRY_DIR, summarize_metrics
 from .api import router as compliance_router
+from .api_routes import router as ui_router
 
 app = FastAPI(title="Agent Factory Governance Console")
+
+# Enable permissive CORS for UI access (restrict in production as needed)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Existing compliance routes (mounted under /api)
 app.include_router(compliance_router, prefix="/api", tags=["compliance"])
+# UI/API routes already include "/api/..." in their path definitions
+app.include_router(ui_router)
 
 
 @app.get("/", response_class=PlainTextResponse)

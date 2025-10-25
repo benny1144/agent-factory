@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 4173",
-    "start": "vite preview --host 0.0.0.0 --port $PORT"
+    "start": "node server.js"
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -17,7 +20,8 @@
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
     "tailwindcss": "^3.4.14",
-    "@radix-ui/react-slot": "^1.1.0"
+    "@radix-ui/react-slot": "^1.1.0",
+    "express": "^4.21.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.5",

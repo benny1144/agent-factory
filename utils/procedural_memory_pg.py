@@ -258,8 +258,9 @@ def get_recent_weights(agent: str, limit: int = 5, engine: Optional[Engine] = No
     return [dict(r) for r in rows]
 
 
-# Phase 6: governance_history table for HITL/HOTL oversight records
-# Defined here to be included in metadata.create_all via init_db()
+# Phase 6: governance tables for HITL/HOTL oversight records
+# Included in metadata.create_all via init_db()
+
 governance_history = Table(
     "governance_history",
     metadata,
@@ -269,6 +270,19 @@ governance_history = Table(
     Column("action", String(255), nullable=True),
     Column("reason", Text, nullable=True),
     Column("approver", String(255), nullable=True),
+)
+
+# New structured governance_events log with richer fields (append-only semantics at writer level)
+governance_events = Table(
+    "governance_events",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("timestamp", DateTime(timezone=True), nullable=False),
+    Column("agent_id", String(255), nullable=True),
+    Column("event_type", String(255), nullable=False),
+    Column("risk_level", String(50), nullable=True),
+    Column("approved_by", String(255), nullable=True),
+    Column("details_json", JSON, nullable=True),
 )
 
 
@@ -297,6 +311,32 @@ def record_governance_event(agent: str, action: str, reason: str, approver: str)
         return int(res.inserted_primary_key[0])
 
 
+def append_governance_event(
+    agent_id: str | None,
+    event_type: str,
+    risk_level: str | None,
+    approved_by: str | None,
+    details: dict | None = None,
+) -> int:
+    """Append a structured governance event to governance_events table.
+
+    This function does not update existing rows (append-only semantics).
+    """
+    engine = init_db()
+    with session_scope(engine) as s:
+        res = s.execute(
+            insert(governance_events).values(
+                timestamp=datetime.now(timezone.utc),
+                agent_id=agent_id,
+                event_type=event_type,
+                risk_level=risk_level,
+                approved_by=approved_by,
+                details_json=details or None,
+            )
+        )
+        return int(res.inserted_primary_key[0])
+
+
 __all__ = [
     "init_db",
     "trace_run",
@@ -307,10 +347,12 @@ __all__ = [
     "adjust_memory_weight",
     "get_recent_weights",
     "record_governance_event",
+    "append_governance_event",
     "agent_runs",
     "tool_registry",
     "knowledge_ingest",
     "memory_events",
     "memory_weights",
     "governance_history",
+    "governance_events",
 ]

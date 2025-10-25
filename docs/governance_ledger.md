@@ -73,3 +73,20 @@ Verification:
 - Service deployed to Cloud Run and UI operational
 
 Recorded: 2025-10-25
+
+---
+
+## AF-GOV/OGM-2025-Audit09.2
+Title: Phase 9.2 — Cloud Run Port Binding & Startup Configuration Fix
+Commit: <latest_hash>
+Status: VERIFIED
+
+Summary:
+- Added Express server to serve built UI and bind to $PORT (Cloud Run readiness OK)
+- Updated frontend/package.json start script to `node server.js`; pinned Node engines ">=18"
+
+Verification:
+- Cloud Build SUCCESS; logs include "[SERVER] listening on port 8080"
+- Cloud Run revision healthy and serving traffic at service URL
+
+Recorded: 2025-10-25

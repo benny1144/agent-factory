@@ -107,3 +107,55 @@ Validation:
 - [AUDIT] Registry integrity and checksum validation complete.
 
 Governance Ledger Entry: **AF-KBA/OGM-2025-Audit02**
+
+
+## Phase 6 — Continuous Oversight (OGM v1.1 Activation)
+
+Date: October 25, 2025
+
+Summary:
+- Added persistent governance event logging with structured DB table `governance_events` (append-only) alongside existing `governance_history`.
+- Enhanced HITL Logger to append JSONL, mirror to DB, and emit `[AUDIT] hitl_action` for Cloud Logging.
+- Introduced daily Governance Sync CI workflow (`.github/workflows/governance-sync.yml`) to aggregate audit/telemetry/HITL into a daily digest and optional GCS upload (bucket: `agent-factory-audit`).
+- Retraining pipeline now considers mean drift (`artifacts/telemetry/ethical_drift.jsonl`) and updates baseline only when threshold exceeded; emits `[RETRAIN]` audit events.
+- Added governance report generator that compiles digest, baseline metadata, and recent governance events into `artifacts/governance_report_<timestamp>.md`.
+
+Artifacts:
+- `artifacts/audit_digest_<date>.json`
+- `artifacts/governance_report_<timestamp>.md`
+- `artifacts/hitl_actions.jsonl`
+- `data/ethical_baseline_v2.json` (+ alias `data/ethical_baseline.json`)
+
+Verification:
+- `[HITL]` entries observed and mirrored to DB (`governance_events`).
+- `[DRIFT]` and `[OPTIMIZE]` telemetry present under `artifacts/telemetry/`.
+- `[RETRAIN]` audit events logged; baseline updated only when drift > 0.35.
+- Governance Sync job successful; daily digest uploaded to GCS when credentials available.
+
+Governance Ledger Entry:
+- Key: **AF-GOV/OGM-2025-Audit04**
+- Title: Phase 6 — Continuous Oversight & Ethical Retraining
+- Result: All oversight and retraining systems operational.
+- Artifacts: `artifacts/governance_report_<timestamp>.md`, `gs://agent-factory-audit/audit_digest_<date>.json`
+
+
+## Phase 6 Verification Summary
+
+Description
+- Continuous oversight is active via append-only HITL governance logs (artifacts/hitl_actions.jsonl), mirrored to DB tables governance_history and governance_events.
+- Daily governance sync aggregates telemetry + audit into a digest and uploads artifacts when configured.
+- Ethical retraining pipeline updates data/ethical_baseline_v2.json only when mean drift exceeds threshold (default 0.35), emitting [RETRAIN] audit entries.
+
+Evidence
+- HITL → RETRAIN → baseline update flow executed end-to-end during Phase 6:
+  - HITL simulation logged: artifacts/hitl_actions.jsonl (and DB mirrors)
+  - Retraining emitted [RETRAIN] audit entries and wrote data/ethical_baseline_v2.json
+  - Telemetry present under artifacts/telemetry/ (ethical_drift.jsonl, optimization_adjustment.jsonl)
+- CI job reference: .github/workflows/governance-sync.yml (scheduled daily; manual dispatch supported)
+
+Dashboards (GCP)
+- Governance Console & Monitoring dashboards show [HITL] and [RETRAIN] metrics.
+- Example entry points (project-specific):
+  - Cloud Monitoring: https://console.cloud.google.com/monitoring/dashboards
+  - Cloud Logging: https://console.cloud.google.com/logs/query
+
