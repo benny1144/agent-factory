@@ -4,6 +4,16 @@ from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from crewai import Agent, Task, Crew, Process, LLM
 
+# Extend sys.path for src-based imports
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.append(str(PROJECT_ROOT / "src"))
+
+from agent_factory.services.audit.audit_logger import (
+    log_agent_run,
+    log_event,
+)
+from utils.procedural_memory_pg import trace_run
+
 # --- Setup Project Root Path ---
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
@@ -153,7 +163,30 @@ def main():
     )
 
     print("\n--- Ultimate Genesis Crew is now building your new agent crew... ---")
-    result = genesis_crew.kickoff()
+
+    # Audit + Procedural trace
+    log_agent_run(agent_name="GenesisCrew", task_id="kickoff", status="started")
+    from utils.procedural_memory_pg import trace_run as _trace_run  # local import to avoid cycles
+    result = None
+    try:
+        with _trace_run("GenesisCrew", task="kickoff") as trace:
+            result = genesis_crew.kickoff()
+            trace["status"] = "success"
+        log_agent_run(agent_name="GenesisCrew", task_id="kickoff", status="success")
+    except Exception as e:
+        log_agent_run(agent_name="GenesisCrew", task_id="kickoff", status="failed")
+        raise
+
+    # Human-on/in-the-loop approval before revealing final output
+    if os.getenv("HITL_APPROVE", "false").lower() != "true":
+        try:
+            resp = input("Review output above (internal). Type 'approve' to continue: ")
+            if resp.strip().lower() != "approve":
+                print("Operation not approved. Exiting without printing final result.")
+                return
+        except EOFError:
+            print("No approval input available; aborting output under HITL policy.")
+            return
 
     print("\n--- Genesis Crew Work Complete ---")
     print("Final Result:")

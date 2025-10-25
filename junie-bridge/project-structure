@@ -1,0 +1,9 @@
+agent-factory/
+└── junie-bridge/
+    ├── build.gradle.kts
+    ├── resources/
+    │   └── META-INF/plugin.xml
+    └── src/main/kotlin/com/agentfactory/juniebridge/
+        ├── BridgeService.kt
+        ├── BridgeServer.kt
+        └── TaskExecutor.kt

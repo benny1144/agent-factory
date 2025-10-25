@@ -1,0 +1,5 @@
+{
+  "ethical_drift": 0.35,
+  "latency_warning_ms": 250,
+  "optimization_window": 10
+}
