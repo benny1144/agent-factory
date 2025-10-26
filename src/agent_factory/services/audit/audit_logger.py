@@ -121,6 +121,35 @@ def log_event(event_type: str, metadata: Optional[Dict[str, Any]] = None) -> Dic
         }, ensure_ascii=False)
 
     logger.info(f"[AUDIT] {json_str}")
+
+    # Mirror to JSONL file with rotation via tools.log_utils (best-effort)
+    try:
+        from pathlib import Path
+        from datetime import datetime as _dt, timezone as _tz
+        logs_dir = Path(os.getenv("LOGS_DIR") or (Path(__file__).resolve().parents[4] / "logs"))
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        day = _dt.now(_tz.utc).date().isoformat()
+        jsonl_path = logs_dir / f"audit_{day}.jsonl"
+        try:
+            from tools.log_utils import append_jsonl  # type: ignore
+            append_jsonl(jsonl_path, event)
+        except Exception:
+            with open(jsonl_path, "a", encoding="utf-8") as f:
+                f.write(json_str + "\n")
+        # Update simple index under compliance/audit_log
+        idx_dir = Path(__file__).resolve().parents[4] / "compliance" / "audit_log"
+        idx_dir.mkdir(parents=True, exist_ok=True)
+        idx = idx_dir / "log_index.txt"
+        line = f"{day},{jsonl_path.as_posix()}\n"
+        try:
+            if not idx.exists() or line not in idx.read_text(encoding="utf-8"):
+                with open(idx, "a", encoding="utf-8") as f:
+                    f.write(line)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
     return event
 
 
@@ -141,9 +170,25 @@ def log_agent_run(agent_name: str, task_id: Optional[str], status: str) -> Dict[
     return log_event("agent_run", meta)
 
 
+def log_memory_consistency(details: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper to log memory consistency daemon events.
+
+    Args:
+        details: Payload with fields like {"action": "rebuild|check", "coherence": float, ...}
+    """
+    return log_event("memory_consistency", details or {})
+
+
+def log_causal_analysis(details: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper to log causal analysis results from the evaluation engine."""
+    return log_event("causal_analysis", details or {})
+
+
 __all__ = [
     "log_event",
     "log_tool_creation",
     "log_knowledge_ingest",
     "log_agent_run",
+    "log_memory_consistency",
+    "log_causal_analysis",
 ]

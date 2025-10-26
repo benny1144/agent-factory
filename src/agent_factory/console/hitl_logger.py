@@ -9,12 +9,12 @@ from typing import Optional
 
 # Local imports (repo-root safe; pytest.ini adds src to pythonpath)
 try:
-    from utils.procedural_memory_pg import (
+    from agent_factory.utils.procedural_memory_pg import (
         record_governance_event,
         append_governance_event,
         init_db,
     )
-    from utils.paths import PROJECT_ROOT
+    from agent_factory.utils.paths import PROJECT_ROOT
     from agent_factory.services.audit.audit_logger import log_event as audit_log_event
 except Exception:  # pragma: no cover - fallback
     record_governance_event = None  # type: ignore

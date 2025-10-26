@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
 
 from agent_factory.services.audit.audit_logger import log_event
-from utils.procedural_memory_pg import insert_memory_event, init_db
-from utils.firewall_protocol import require_risk
+from agent_factory.utils.procedural_memory_pg import insert_memory_event, init_db
+from agent_factory.utils.firewall_protocol import require_risk
 
 # Adapter imports (stubs)
 from .faiss_adapter import FaissMemoryAdapter

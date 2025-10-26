@@ -161,6 +161,32 @@ def trace_run(agent: str, task: Optional[str] = None) -> Generator[Dict[str, Any
                     finished_at=finished, status=context.get("status")
                 )
             )
+        # Mirror to JSONL log (best-effort)
+        try:
+            from pathlib import Path as _P
+            from datetime import datetime as _dt, timezone as _tz
+            # Build event record
+            ev = {
+                "run_id": context.get("run_id"),
+                "agent": context.get("agent"),
+                "task": context.get("task"),
+                "status": context.get("status"),
+                "started_at": started.isoformat(),
+                "finished_at": finished.isoformat(),
+            }
+            logs_dir = _P(__file__).resolve().parents[1] / "logs"
+            logs_dir.mkdir(parents=True, exist_ok=True)
+            day = _dt.now(_tz.utc).date().isoformat()
+            jsonl_path = logs_dir / f"agent_runs_{day}.jsonl"
+            try:
+                from tools.log_utils import append_jsonl as _append  # type: ignore
+                _append(jsonl_path, ev)
+            except Exception:
+                with open(jsonl_path, "a", encoding="utf-8") as f:
+                    import json as _json
+                    f.write(_json.dumps(ev, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
 
 def register_tool(tool_name: str, path: Path, schema: Optional[Dict[str, Any]] = None, engine: Optional[Engine] = None) -> int:

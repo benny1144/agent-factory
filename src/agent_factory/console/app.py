@@ -7,7 +7,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
-from utils.telemetry import TELEMETRY_DIR, summarize_metrics
+from agent_factory.utils.telemetry import TELEMETRY_DIR, summarize_metrics
 from .api import router as compliance_router
 from .api_routes import router as ui_router
 

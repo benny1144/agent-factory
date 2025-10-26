@@ -9,8 +9,8 @@ from typing import Any, Dict, List
 import numpy as np  # runtime dependency provided in CI workflow
 
 # Ensure src-relative imports resolve in tests (pytest.ini adds src to pythonpath)
-from utils.telemetry import log_metric
-from utils.paths import PROJECT_ROOT
+from agent_factory.utils.telemetry import log_metric
+from agent_factory.utils.paths import PROJECT_ROOT
 
 
 class EthicalDriftMonitor:

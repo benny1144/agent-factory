@@ -7,13 +7,13 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser  # <-- We add an output parser
 
-# Add src path for utilities and audit
+# Ensure repo root and src are on sys.path
+import tools.startup  # noqa: F401
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.append(str(PROJECT_ROOT / "src"))
 
 from agent_factory.services.audit.audit_logger import log_tool_creation
-from utils.paths import TOOLS_DIR, TESTS_DIR, PERSONAS_DIR
-from utils.procedural_memory_pg import register_tool
+from agent_factory.utils.paths import TOOLS_DIR, TESTS_DIR, PERSONAS_DIR
+from agent_factory.utils.procedural_memory_pg import register_tool
 
 def main():
     """

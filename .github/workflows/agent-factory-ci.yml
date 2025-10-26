@@ -23,14 +23,25 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest sqlalchemy python-dotenv fastapi prometheus-client
+          pip install pytest pytest-cov sqlalchemy python-dotenv fastapi prometheus-client mypy black isort ruff pyyaml
           pip install -r requirements.txt || true
 
-      - name: Run pytest
+      - name: Lint & Type Check
         run: |
-          mkdir -p artifacts
+          black --version
+          isort --version
+          ruff --version
+          mkdir -p reports/ci
+          black --check . | tee reports/ci/black.txt || true
+          isort --check-only . | tee reports/ci/isort.txt || true
+          ruff check . | tee reports/ci/ruff.txt || true
+          mypy --ignore-missing-imports --install-types --non-interactive src || true
+
+      - name: Run pytest with coverage
+        run: |
+          mkdir -p artifacts reports/ci
           set -o pipefail
-          pytest -q | tee artifacts/pytest_output.log
+          pytest -q --cov=src --cov-report=term-missing --cov-report=xml:reports/ci/coverage.xml | tee artifacts/pytest_output.log
 
       - name: Upload Pytest Output
         if: always()
@@ -76,4 +87,16 @@ jobs:
         with:
           name: audit-logs
           path: validation/logs/*
+          if-no-files-found: warn
+
+      - name: Phase 4–9 Stability Validation
+        run: |
+          python scripts/phase4_9_stability.py
+
+      - name: Upload Stability Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase4-9-stability-report
+          path: reports/phase4-9_stability_report_*.md
           if-no-files-found: warn

@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 
 # Repo-root aware paths
 try:
-    from utils.paths import PROJECT_ROOT
+    from agent_factory.utils.paths import PROJECT_ROOT
 except Exception:  # fallback for isolated execution
     PROJECT_ROOT = Path(__file__).resolve().parents[3]
 

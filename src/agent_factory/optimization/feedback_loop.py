@@ -7,12 +7,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-from utils.procedural_memory_pg import adjust_memory_weight, init_db
-from utils.telemetry import TELEMETRY_DIR, log_metric
+from agent_factory.utils.procedural_memory_pg import adjust_memory_weight, init_db
+from agent_factory.utils.telemetry import TELEMETRY_DIR, log_metric
 
 try:
     # Prefer repo-root-safe resolution for config
-    from utils.paths import PROJECT_ROOT
+    from agent_factory.utils.paths import PROJECT_ROOT
 except Exception:  # fallback
     PROJECT_ROOT = Path(__file__).resolve().parents[3]
 

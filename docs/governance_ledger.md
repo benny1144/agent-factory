@@ -132,3 +132,24 @@ Status: VERIFIED
 Summary: Backend Cloud Run service deployed and connected to UI; WebSocket stream active; governance events propagating end-to-end with HITL logs and metrics.
 Verification: Console dashboard interactive, no CORS errors; /healthz 200; /drift and /optimization return JSON; /ws echo works; /api/ws/telemetry streams; Cloud Logs show [HITL], [AUDIT], [RETRAIN]; CI green.
 Recorded: 2025-10-25
+
+
+## AF-GOV/OGM-2025-Genesis-Review-Archivist
+Title: Genesis Review Request — Archivist Agent (Read/Write Curator)
+Commit: <latest_hash>
+Status: SUBMITTED
+
+Summary:
+- Submitted Genesis review request for deploying the Archivist Curator agent with governed read/write operations.
+- Review document created and added to tasks/reviews.
+- Helper script provided to emit a structured [AUDIT] genesis_review_request event and persist a JSONL record.
+
+Artifacts:
+- tasks/reviews/2025-10-26_genesis_review_archivist.md
+- artifacts/genesis_reviews.jsonl (populated by scripts/submit_genesis_review.py)
+
+Verification:
+- Run: python scripts/submit_genesis_review.py
+- Expect console output with the JSON envelope and an [AUDIT] line in logs.
+
+Recorded: 2025-10-26

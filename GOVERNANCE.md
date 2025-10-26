@@ -16,4 +16,9 @@ Compliance with this protocol is required for every asset and component within t
 
 This project operates on a **"secure by design"** principle. Security, reliability, and predictability are not afterthoughts; they are the primary requirements for any code to be accepted into this project. Any contribution, whether a new tool or an agent modification, will be evaluated against the standards of the Human Firewall Protocol before it is approved.
 
+## Reflective Sync Automation
+
+Every executed [JUNIE TASK] must automatically update governance records, procedural memory, and RAG embeddings via `tools/reflective_sync.py`.
+No code change is final until a sync confirmation hash is logged in `compliance/audit_log/reflective_sync.csv`.
+
 This document serves as the single source of truth for the project's commitment to building a secure, reliable, and trustworthy agentic workforce.

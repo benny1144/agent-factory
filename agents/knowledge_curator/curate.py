@@ -5,15 +5,21 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-
-# Add src to path for audit logger
 import sys
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.append(str(PROJECT_ROOT / "src"))
+
+# Ensure repo-root and src are on sys.path
+import tools.startup  # noqa: F401
+
+# Prefer centralized config loader; fallback to dotenv below
+try:
+    from tools.config_loader import load_env  # type: ignore
+    load_env()
+except Exception:
+    pass
 
 from agent_factory.services.audit.audit_logger import log_knowledge_ingest
-from utils.procedural_memory_pg import insert_ingest
-from utils.paths import KB_SRC_DIR, PROVENANCE_DIR
+from agent_factory.utils.procedural_memory_pg import insert_ingest
+from agent_factory.utils.paths import KB_SRC_DIR, PROVENANCE_DIR
 from agent_factory.services.memory.engine import MemoryEngine
 
 

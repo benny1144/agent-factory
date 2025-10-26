@@ -1,22 +1,124 @@
 import os
 import sys
 from pathlib import Path
+from datetime import datetime, timezone
+from typing import Any, Dict, List
 from dotenv import load_dotenv, find_dotenv
 from crewai import Agent, Task, Crew, Process, LLM
 
-# Extend sys.path for src-based imports
+# Ensure repo root and src/ are on path
+import tools.startup  # noqa: F401
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.append(str(PROJECT_ROOT / "src"))
 
 from agent_factory.services.audit.audit_logger import (
     log_agent_run,
     log_event,
 )
-from utils.procedural_memory_pg import trace_run
+from agent_factory.utils.procedural_memory_pg import trace_run
+
+
+# -------------------------------
+# GenesisOrchestrator (admin API)
+# -------------------------------
+class GenesisOrchestrator:
+    """Lightweight orchestration facade for admin tooling.
+
+    Persists state under data/genesis_state.json and logs under
+    logs/genesis_session_YYYYMMDD.log. This class is intentionally minimal
+    and does not start the Crew itself; it exposes admin-friendly hooks.
+    """
+
+    def __init__(self) -> None:
+        self.repo_root = PROJECT_ROOT
+        self.data_dir = self.repo_root / "data"
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.state_path = self.data_dir / "genesis_state.json"
+        self.logs_dir = self.repo_root / "logs"
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
+
+    # ---- internal helpers ----
+    def _now(self) -> str:
+        return datetime.now(timezone.utc).isoformat()
+
+    def _load_state(self) -> Dict[str, Any]:
+        if self.state_path.exists():
+            try:
+                import json
+                return json.loads(self.state_path.read_text(encoding="utf-8"))
+            except Exception:
+                return {"state": "error"}
+        return {"state": "idle", "active": False}
+
+    def _save_state(self, payload: Dict[str, Any]) -> None:
+        try:
+            import json
+            self.state_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception:
+            pass
+
+    def _log_line(self, text: str) -> None:
+        day = datetime.now(timezone.utc).date().isoformat()
+        path = self.logs_dir / f"genesis_session_{day}.log"
+        try:
+            with path.open("a", encoding="utf-8") as f:
+                f.write(f"[{self._now()}] {text}\n")
+        except Exception:
+            pass
+
+    def _latest_log_path(self) -> Path:
+        day = datetime.now(timezone.utc).date().isoformat()
+        path = self.logs_dir / f"genesis_session_{day}.log"
+        return path
+
+    # ---- public API ----
+    def get_status(self) -> Dict[str, Any]:
+        st = self._load_state()
+        # Normalize state label
+        mode = st.get("mode") or ("architect_mode" if st.get("active") else None)
+        state = "error" if st.get("state") == "error" else (mode or ("active" if st.get("active") else "idle"))
+        payload = {
+            "state": state,
+            "active": bool(st.get("active", False)),
+            "mode": mode,
+            "updated": st.get("updated") or self._now(),
+        }
+        return payload
+
+    def reactivate(self, mode: str = "architect_mode") -> Dict[str, Any]:
+        mode = (mode or "architect_mode").strip().lower()
+        if mode not in {"architect_mode", "observer_mode"}:
+            mode = "architect_mode"
+        st = {"state": "active", "active": True, "mode": mode, "updated": self._now()}
+        self._save_state(st)
+        self._log_line(f"Reactivate requested: mode={mode}")
+        try:
+            log_event("genesis_reactivate", {"mode": mode})
+        except Exception:
+            pass
+        return {"ok": True, **st}
+
+    def shutdown(self) -> Dict[str, Any]:
+        st = self._load_state()
+        st.update({"state": "idle", "active": False, "updated": self._now()})
+        self._save_state(st)
+        self._log_line("Shutdown requested")
+        try:
+            log_event("genesis_shutdown", {})
+        except Exception:
+            pass
+        return {"ok": True, **st}
+
+    def tail_logs(self, n: int = 20) -> List[str]:
+        p = self._latest_log_path()
+        if not p.exists():
+            return []
+        try:
+            lines = p.read_text(encoding="utf-8", errors="ignore").splitlines()
+            return lines[-int(n):]
+        except Exception:
+            return []
 
 # --- Setup Project Root Path ---
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.append(str(PROJECT_ROOT))
 from tools.charter_tools import search_knowledge_base
 from tools.search_tools import search_tool
 
@@ -119,6 +221,30 @@ def main():
     if not user_goal:
         user_goal = input("What kind of agentic crew would you like to build today?\n> ")
 
+    # --- Dynamic Oversight: evaluate risk before action (Reflective L3) ---
+    try:
+        import importlib
+        fw = importlib.import_module('agent_factory.utils.firewall_protocol')
+        eval_fn = getattr(fw, 'evaluate_risk_before_action', None)
+        if callable(eval_fn):
+            # Allow callers to influence via env (default medium/internal)
+            criticality = os.getenv('GENESIS_TASK_CRITICALITY', 'medium')
+            sensitivity = os.getenv('GENESIS_DATA_SENSITIVITY', 'internal')
+            risk = eval_fn({
+                'goal': user_goal,
+                'action': 'genesis_kickoff',
+                'actor': 'GenesisCrew',
+                'llm_confidence': None,
+                'criticality': criticality,
+                'sensitivity': sensitivity,
+            })
+            try:
+                log_event('genesis_risk_attached', {'risk': risk})
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     research_task = Task(
         description=f"Conduct thorough research on the user's goal: '{user_goal}'. First, search the internal knowledge base for best practices and templates. If needed, use the web search tool to find modern, external examples and architectural patterns.",
         expected_output="A markdown research brief summarizing findings, including internal best practices and external examples relevant to the user's goal.",
@@ -166,10 +292,29 @@ def main():
 
     # Audit + Procedural trace
     log_agent_run(agent_name="GenesisCrew", task_id="kickoff", status="started")
-    from utils.procedural_memory_pg import trace_run as _trace_run  # local import to avoid cycles
+    from agent_factory.utils.procedural_memory_pg import trace_run as _trace_run  # local import to avoid cycles
     result = None
     try:
         with _trace_run("GenesisCrew", task="kickoff") as trace:
+            # Attach last computed risk from earlier step if available via env cache (best-effort)
+            try:
+                import importlib
+                fw = importlib.import_module('utils.firewall_protocol')
+                eval_fn = getattr(fw, 'evaluate_risk_before_action', None)
+                if callable(eval_fn):
+                    criticality = os.getenv('GENESIS_TASK_CRITICALITY', 'medium')
+                    sensitivity = os.getenv('GENESIS_DATA_SENSITIVITY', 'internal')
+                    risk_payload = eval_fn({
+                        'goal': user_goal,
+                        'action': 'genesis_kickoff',
+                        'actor': 'GenesisCrew',
+                        'llm_confidence': None,
+                        'criticality': criticality,
+                        'sensitivity': sensitivity,
+                    })
+                    trace["risk"] = risk_payload
+            except Exception:
+                pass
             result = genesis_crew.kickoff()
             trace["status"] = "success"
         log_agent_run(agent_name="GenesisCrew", task_id="kickoff", status="success")

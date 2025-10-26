@@ -30,3 +30,8 @@ audit-kba:
 
 setup:
 	@python scripts/setup_venv.py
+
+
+# Post-Cleanup Verification target
+verify-postcleanup:
+	@python scripts/post_cleanup_verification.py
