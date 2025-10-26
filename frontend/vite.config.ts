@@ -8,6 +8,10 @@ export default defineConfig({
     port: 5173,
     host: true,
   },
+  // Allow Render preview host to access the app in production
+  preview: {
+    allowedHosts: ['agent-factory-ui.onrender.com'],
+  },
   build: {
     outDir: 'dist'
   }
