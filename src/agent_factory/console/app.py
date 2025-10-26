@@ -23,11 +23,13 @@ except Exception:  # pragma: no cover
 
 app = FastAPI(title="Agent Factory Governance Console")
 
-# CORS origins aligned with UI (Cloud Run + local dev + custom domain)
+# CORS origins aligned with UI (Render + local dev + custom domain + legacy Cloud Run)
 origins = [
-    "https://agent-factory-ui-1092120039663.us-central1.run.app",
+    "https://agent-factory-ui.onrender.com",
     "http://localhost:5173",
     "https://dashboard.agent-factory.dev",
+    # keep legacy Cloud Run UI origin for backward compatibility
+    "https://agent-factory-ui-1092120039663.us-central1.run.app",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -104,6 +106,6 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
 
 
-@app.get("/healthz", response_class=PlainTextResponse)
-def healthz() -> str:
-    return "Agent Factory Console Active"
+@app.get("/healthz")
+def healthz() -> dict:
+    return {"status": "ok", "service": "agent-factory-console"}
