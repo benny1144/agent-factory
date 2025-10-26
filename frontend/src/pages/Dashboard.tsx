@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { fetchDrift, fetchOptimization, getWsUrl } from '../api/client'
 import DriftChart from '../components/DriftChart'
+import GenesisHealthCard from '../components/GenesisHealthCard'
 
 export default function Dashboard() {
   const [drift, setDrift] = useState<any>({ count: 0, records: [] })
@@ -53,6 +54,7 @@ export default function Dashboard() {
       <h1>Governance Dashboard</h1>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+        <GenesisHealthCard />
         <div>
           <h3>Ethical Drift (last 10)</h3>
           <DriftChart data={(drift.records || []).map((r: any, i: number) => ({ index: i, score: r?.data?.score ?? 0 }))} />

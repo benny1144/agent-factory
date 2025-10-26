@@ -1,8 +1,9 @@
 import os
 import sys
+import subprocess
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv, find_dotenv
 from crewai import Agent, Task, Crew, Process, LLM
 
@@ -35,6 +36,21 @@ class GenesisOrchestrator:
         self.state_path = self.data_dir / "genesis_state.json"
         self.logs_dir = self.repo_root / "logs"
         self.logs_dir.mkdir(parents=True, exist_ok=True)
+        # Runtime process tracking (best-effort)
+        self._listener_pid_path = self.data_dir / "genesis_listener.pid"
+        # Health monitor defaults (env-configurable)
+        try:
+            self.healthcheck_interval = int(os.getenv("GENESIS_HEALTHCHECK_INTERVAL", "60"))
+        except Exception:
+            self.healthcheck_interval = 60
+        try:
+            self.max_failures = int(os.getenv("GENESIS_MAX_FAILURES", "3"))
+        except Exception:
+            self.max_failures = 3
+        self.healthcheck_failures = 0
+        self.listener_port: Optional[int] = None
+        self.listener_active: bool = False
+        self._health_thread_started: bool = False
 
     # ---- internal helpers ----
     def _now(self) -> str:
@@ -70,6 +86,74 @@ class GenesisOrchestrator:
         path = self.logs_dir / f"genesis_session_{day}.log"
         return path
 
+    # ---- health monitor ----
+    def _emit_health_event(self, status: str) -> None:
+        try:
+            from datetime import datetime as _dt
+            ts = _dt.utcnow().isoformat()
+            # Log to session log for operator visibility
+            self._log_line(f"[HealthEvent] status={status} port={getattr(self, 'listener_port', '')}")
+            row = f"{ts},{getattr(self, 'listener_port', '')},{status},{self._load_state().get('mode')}\n"
+            audit_dir = self.repo_root / "compliance" / "audit_log"
+            audit_dir.mkdir(parents=True, exist_ok=True)
+            (audit_dir / "genesis_health.csv").open("a", encoding="utf-8").write(row)
+        except Exception:
+            pass
+
+    def _start_health_monitor(self) -> None:
+        if self._health_thread_started:
+            return
+        self._health_thread_started = True
+
+        def monitor() -> None:
+            import time as _time
+            import httpx as _httpx
+            while True:
+                try:
+                    # Stop condition: not active or listener off
+                    st = self._load_state()
+                    if not st.get("active") or not bool(getattr(self, "listener_active", False)) or not getattr(self, "listener_port", None):
+                        break
+                    _time.sleep(int(getattr(self, "healthcheck_interval", 60)))
+                    port = int(getattr(self, "listener_port", 0) or 0)
+                    if port <= 0:
+                        continue
+                    try:
+                        r = _httpx.get(f"http://127.0.0.1:{port}/ping", timeout=3.0)
+                        ok = (r.status_code == 200) and (r.json().get("ok") is True)
+                    except Exception as e:  # request error
+                        ok = False
+                        err = e
+                    if ok:
+                        self.healthcheck_failures = 0
+                        self._log_line(f"[Health] OK on port {port}")
+                        self._emit_health_event("ok")
+                    else:
+                        self.healthcheck_failures += 1
+                        self._log_line(f"[Health] Failed check {self.healthcheck_failures}/{self.max_failures}")
+                        self._emit_health_event("fail")
+                        if self.healthcheck_failures >= int(getattr(self, "max_failures", 3)):
+                            self._log_line("[Genesis] Listener unresponsive — attempting restart")
+                            try:
+                                # attempt restart
+                                self.listen(port)
+                                self.healthcheck_failures = 0
+                                self._emit_health_event("restart")
+                            except Exception as re:  # pragma: no cover
+                                self._log_line(f"[Genesis] Listener restart failed: {re}")
+                                self._emit_health_event("fatal")
+                except Exception:
+                    # Never crash the monitor
+                    try:
+                        self._emit_health_event("fatal")
+                    except Exception:
+                        pass
+                    break
+
+        import threading as _threading
+        t = _threading.Thread(target=monitor, daemon=True)
+        t.start()
+
     # ---- public API ----
     def get_status(self) -> Dict[str, Any]:
         st = self._load_state()
@@ -81,10 +165,12 @@ class GenesisOrchestrator:
             "active": bool(st.get("active", False)),
             "mode": mode,
             "updated": st.get("updated") or self._now(),
+            "listening": bool(st.get("listening", False)),
+            "listen_port": st.get("listen_port"),
         }
         return payload
 
-    def reactivate(self, mode: str = "architect_mode") -> Dict[str, Any]:
+    def reactivate(self, mode: str = "architect_mode", listen_port: Optional[int] = None) -> Dict[str, Any]:
         mode = (mode or "architect_mode").strip().lower()
         if mode not in {"architect_mode", "observer_mode"}:
             mode = "architect_mode"
@@ -95,6 +181,14 @@ class GenesisOrchestrator:
             log_event("genesis_reactivate", {"mode": mode})
         except Exception:
             pass
+        # If a listen port is provided, start the intake listener
+        if isinstance(listen_port, int) and listen_port > 0:
+            try:
+                self.listen(listen_port)
+                st = self._load_state()
+            except Exception:
+                # keep activation successful even if listener fails
+                pass
         return {"ok": True, **st}
 
     def shutdown(self) -> Dict[str, Any]:
@@ -117,6 +211,73 @@ class GenesisOrchestrator:
             return lines[-int(n):]
         except Exception:
             return []
+
+    def listen(self, port: int) -> Dict[str, Any]:
+        """Launch the lightweight FastAPI intake service on the given port.
+
+        Spawns a background uvicorn process serving
+        agents.architect_genesis.intake_service:app and updates the state file
+        with listening information. Best-effort; does not raise on failure.
+        """
+        try:
+            p = int(port)
+            if p <= 0 or p > 65535:
+                raise ValueError("invalid_port")
+        except Exception:
+            self._log_line(f"Listener not started: invalid port {port}")
+            return {"ok": False, "error": "invalid_port"}
+
+        # If a previous PID exists, do not start another (best-effort)
+        if self._listener_pid_path.exists():
+            try:
+                prev = int(self._listener_pid_path.read_text(encoding="utf-8").strip())
+            except Exception:
+                prev = None  # type: ignore
+        else:
+            prev = None  # type: ignore
+
+        # Build environment with repo paths for module resolution
+        env = os.environ.copy()
+        py_paths = [str(self.repo_root), str(self.repo_root / "src")]
+        env["PYTHONPATH"] = (env.get("PYTHONPATH") + os.pathsep if env.get("PYTHONPATH") else "") + os.pathsep.join(py_paths)
+
+        try:
+            proc = subprocess.Popen(
+                [sys.executable, "-m", "uvicorn", "agents.architect_genesis.intake_service:app", "--host", "0.0.0.0", "--port", str(p)],
+                cwd=str(self.repo_root),
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            # Persist PID and state
+            try:
+                self._listener_pid_path.write_text(str(proc.pid), encoding="utf-8")
+            except Exception:
+                pass
+            st = self._load_state()
+            st.update({"listening": True, "listen_port": p, "updated": self._now()})
+            self._save_state(st)
+            # Update in-memory flags for health monitor
+            self.listener_port = p
+            self.listener_active = True
+            self._log_line(f"[Genesis] Listening on port {p}")
+            try:
+                log_event("genesis_listen", {"port": p, "pid": proc.pid})
+            except Exception:
+                pass
+            # Start health monitor (best-effort)
+            try:
+                self._start_health_monitor()
+            except Exception:
+                self._log_line("[Health] Monitor failed to start (non-fatal)")
+            return {"ok": True, **st}
+        except Exception as e:
+            self._log_line(f"Listener failed to start on port {port}: {e}")
+            try:
+                log_event("genesis_listen_error", {"port": port, "error": str(e)})
+            except Exception:
+                pass
+            return {"ok": False, "error": str(e)}
 
 # --- Setup Project Root Path ---
 from tools.charter_tools import search_knowledge_base

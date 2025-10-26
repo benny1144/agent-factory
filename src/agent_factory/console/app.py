@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, PlainTextResponse
 from agent_factory.utils.telemetry import TELEMETRY_DIR, summarize_metrics
 from .api import router as compliance_router
 from .api_routes import router as ui_router
+from .health import router as health_router
 
 # New integrated intelligence & observability routers
 from agent_factory.api import gpt_router as gpt_router
@@ -46,6 +47,8 @@ app.include_router(ui_router)
 # Mount GPT assistant and telemetry websocket routers
 app.include_router(gpt_router)
 app.include_router(telemetry_router)
+# Mount health router
+app.include_router(health_router)
 
 # Mount Prometheus metrics exporter if available
 if make_asgi_app:
