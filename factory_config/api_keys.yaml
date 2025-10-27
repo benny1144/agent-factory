@@ -1,0 +1,97 @@
+# ============================================================
+# Factory Agent Global API Configuration
+# ============================================================
+# This file securely stores API keys and credentials for all
+# research and integration services used by the Agent Factory.
+#
+# ⚠️ NOTE: Do not commit this file to GitHub or external repos.
+#          Add it to .gitignore immediately.
+# ============================================================
+
+version: 1.0
+last_updated: "2025-10-27T00:00:00Z"
+maintainer: "Agent Factory Governance Council"
+
+# --------------------------------------------------------------------
+# 🌐 Global Research Integrations
+# --------------------------------------------------------------------
+# These APIs allow Archy (Archivist) and other knowledge agents to
+# conduct external research, synthesis, and cross-source validation.
+# --------------------------------------------------------------------
+
+research_integrations:
+  serper:
+    name: "Serper.dev"
+    enabled: true
+    base_url: "https://google.serper.dev/search"
+    api_key: "YOUR_SERPER_API_KEY_HERE"
+
+  arxiv:
+    name: "arXiv Research API"
+    enabled: true
+    base_url: "http://export.arxiv.org/api/query"
+    api_key: null   # Arxiv doesn’t require one
+
+  semantic_scholar:
+    name: "Semantic Scholar"
+    enabled: true
+    base_url: "https://api.semanticscholar.org/graph/v1/paper/search"
+    api_key: "YOUR_SEMANTIC_SCHOLAR_KEY_HERE"
+
+# --------------------------------------------------------------------
+# 🧠 LLM + Factory Intelligence Integrations
+# --------------------------------------------------------------------
+# These keys authorize the GPT-based reasoning capabilities and
+# integration between Genesis, Prometheus, and other internal agents.
+# --------------------------------------------------------------------
+
+llm_integrations:
+  openai:
+    name: "OpenAI GPT-5"
+    enabled: true
+    model: "gpt-5"
+    api_key: "YOUR_OPENAI_API_KEY_HERE"
+
+  anthropic:
+    name: "Claude 3"
+    enabled: false
+    model: "claude-3-opus"
+    api_key: null
+
+# --------------------------------------------------------------------
+# 🛡 Governance and Security
+# --------------------------------------------------------------------
+# These configurations enforce the security posture of key access
+# and audit trails across all API usage.
+# --------------------------------------------------------------------
+
+governance:
+  encryption_enabled: true
+  encryption_algorithm: "AES256"
+  rotate_keys_interval_days: 90
+  audit_logging_enabled: true
+  audit_log_path: "logs/api_usage_audit.log"
+  restricted_access_roles:
+    - genesis
+    - junie
+    - archivist
+  environment_variable_prefix: "FACTORY_"
+
+# --------------------------------------------------------------------
+# ⚙️ Internal Utility Services
+# --------------------------------------------------------------------
+# Internal APIs used for document storage, knowledge federation,
+# or internal telemetry.
+# --------------------------------------------------------------------
+
+internal_services:
+  knowledge_federation:
+    base_url: "http://localhost:8080/federation"
+    api_key: "LOCAL_DEV_TOKEN"
+  telemetry_collector:
+    base_url: "http://localhost:5051/telemetry"
+    api_key: null
+
+# ============================================================
+# End of File
+# ============================================================

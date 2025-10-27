@@ -181,15 +181,21 @@ class GenesisOrchestrator:
             log_event("genesis_reactivate", {"mode": mode})
         except Exception:
             pass
+        listen_result: Dict[str, Any] | None = None
         # If a listen port is provided, start the intake listener
         if isinstance(listen_port, int) and listen_port > 0:
             try:
-                self.listen(listen_port)
+                listen_result = self.listen(listen_port)
                 st = self._load_state()
-            except Exception:
+            except Exception as e:
                 # keep activation successful even if listener fails
-                pass
-        return {"ok": True, **st}
+                self._log_line(f"Listener start raised: {e}")
+        payload = {"ok": True, **st}
+        if listen_result is not None:
+            payload["listen_ok"] = bool(listen_result.get("ok", False))
+            if not payload["listen_ok"]:
+                payload["listen_error"] = listen_result.get("error")
+        return payload
 
     def shutdown(self) -> Dict[str, Any]:
         st = self._load_state()
@@ -213,12 +219,13 @@ class GenesisOrchestrator:
             return []
 
     def listen(self, port: int) -> Dict[str, Any]:
-        """Launch the lightweight FastAPI intake service on the given port.
+        """Launch the FastAPI listener on the given port and verify health.
 
-        Spawns a background uvicorn process serving
-        agents.architect_genesis.intake_service:app and updates the state file
-        with listening information. Best-effort; does not raise on failure.
+        - Spawns uvicorn serving factory_agents.architect_genesis.api:app
+        - Writes child stdout/stderr to logs/genesis_listener_<date>.log
+        - Polls /health up to 10s; only marks listening=True on success
         """
+        # Validate port
         try:
             p = int(port)
             if p <= 0 or p > 65535:
@@ -227,57 +234,107 @@ class GenesisOrchestrator:
             self._log_line(f"Listener not started: invalid port {port}")
             return {"ok": False, "error": "invalid_port"}
 
-        # If a previous PID exists, do not start another (best-effort)
-        if self._listener_pid_path.exists():
-            try:
-                prev = int(self._listener_pid_path.read_text(encoding="utf-8").strip())
-            except Exception:
-                prev = None  # type: ignore
-        else:
-            prev = None  # type: ignore
+        # Detect if port is already in use (best-effort)
+        try:
+            import socket as _socket
+            with _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM) as s:
+                s.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+                try:
+                    s.bind(("127.0.0.1", p))
+                    s.close()
+                except Exception:
+                    self._log_line(f"Listener not started: port {p} already in use")
+                    return {"ok": False, "error": "port_in_use"}
+        except Exception:
+            # Ignore socket check failures on some platforms
+            pass
 
         # Build environment with repo paths for module resolution
         env = os.environ.copy()
         py_paths = [str(self.repo_root), str(self.repo_root / "src")]
         env["PYTHONPATH"] = (env.get("PYTHONPATH") + os.pathsep if env.get("PYTHONPATH") else "") + os.pathsep.join(py_paths)
 
+        # Listener log file (captures uvicorn output)
+        day = datetime.now(timezone.utc).date().isoformat()
+        listener_log = self.logs_dir / f"genesis_listener_{day}.log"
+
         try:
+            with listener_log.open("a", encoding="utf-8") as lf:
+                lf.write(f"[{self._now()}] Spawning uvicorn on port {p}\n")
             proc = subprocess.Popen(
-                [sys.executable, "-m", "uvicorn", "agents.architect_genesis.api:app", "--host", "0.0.0.0", "--port", str(p)],
+                [sys.executable, "-m", "uvicorn", "factory_agents.architect_genesis.api:app", "--host", "0.0.0.0", "--port", str(p)],
                 cwd=str(self.repo_root),
                 env=env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stdout=listener_log.open("a", encoding="utf-8"),
+                stderr=listener_log.open("a", encoding="utf-8"),
             )
-            # Persist PID and state
-            try:
-                self._listener_pid_path.write_text(str(proc.pid), encoding="utf-8")
-            except Exception:
-                pass
-            st = self._load_state()
-            st.update({"listening": True, "listen_port": p, "updated": self._now()})
-            self._save_state(st)
-            # Update in-memory flags for health monitor
-            self.listener_port = p
-            self.listener_active = True
-            self._log_line(f"[Genesis] Listening on port {p}")
-            try:
-                log_event("genesis_listen", {"port": p, "pid": proc.pid})
-            except Exception:
-                pass
-            # Start health monitor (best-effort)
-            try:
-                self._start_health_monitor()
-            except Exception:
-                self._log_line("[Health] Monitor failed to start (non-fatal)")
-            return {"ok": True, **st}
         except Exception as e:
-            self._log_line(f"Listener failed to start on port {port}: {e}")
+            self._log_line(f"Listener failed to spawn on port {p}: {e}")
             try:
-                log_event("genesis_listen_error", {"port": port, "error": str(e)})
+                log_event("genesis_listen_error", {"port": p, "error": str(e)})
             except Exception:
                 pass
             return {"ok": False, "error": str(e)}
+
+        # Write PID early
+        try:
+            self._listener_pid_path.write_text(str(proc.pid), encoding="utf-8")
+        except Exception:
+            pass
+
+        # Poll health endpoint up to 10 seconds
+        import time as _time
+        import httpx as _httpx
+        healthy = False
+        last_err: str | None = None
+        for _ in range(20):  # 20 * 0.5s = 10s
+            _time.sleep(0.5)
+            try:
+                r = _httpx.get(f"http://127.0.0.1:{p}/health", timeout=1.0)
+                if r.status_code == 200 and r.json().get("ok") is True:
+                    healthy = True
+                    break
+            except Exception as e:  # likely not up yet
+                last_err = str(e)
+                if proc.poll() is not None:
+                    # Child exited prematurely
+                    break
+
+        if not healthy:
+            # Cleanup: kill process if still running
+            try:
+                if proc.poll() is None:
+                    proc.terminate()
+            except Exception:
+                pass
+            self._log_line(f"Listener health check failed on port {p}. Last error: {last_err}")
+            try:
+                log_event("genesis_listen_failed", {"port": p, "pid": proc.pid, "error": last_err})
+            except Exception:
+                pass
+            # Do not mark listening=true
+            st = self._load_state()
+            st.update({"listening": False, "listen_port": None, "updated": self._now()})
+            self._save_state(st)
+            return {"ok": False, "error": last_err or "health_check_failed", "pid": proc.pid, "log": str(listener_log)}
+
+        # Mark success
+        st = self._load_state()
+        st.update({"listening": True, "listen_port": p, "updated": self._now()})
+        self._save_state(st)
+        self.listener_port = p
+        self.listener_active = True
+        self._log_line(f"[Genesis] Listening on port {p}")
+        try:
+            log_event("genesis_listen", {"port": p, "pid": proc.pid, "log": str(listener_log)})
+        except Exception:
+            pass
+        # Start health monitor (best-effort)
+        try:
+            self._start_health_monitor()
+        except Exception:
+            self._log_line("[Health] Monitor failed to start (non-fatal)")
+        return {"ok": True, **st, "pid": proc.pid, "log": str(listener_log)}
 
 # --- Setup Project Root Path ---
 from tools.charter_tools import search_knowledge_base
@@ -501,5 +558,5 @@ def main():
 if __name__ == "__main__":
     # Autostart FastAPI listener for Genesis on port 5055
     import uvicorn  # type: ignore
-    from agents.architect_genesis.api import app  # lazy import to avoid circulars
+    from factory_agents.architect_genesis.api import app  # lazy import to avoid circulars
     uvicorn.run(app, host="0.0.0.0", port=5055, log_level="info")

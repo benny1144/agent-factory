@@ -19,9 +19,9 @@ See GOVERNANCE.md for details.
 Validation
 - Run tests: `pytest -q`
 - Manual runs:
-  - Architect Genesis: `python agents/architect_genesis/main.py`
-  - Toolmaker Copilot: `python agents/toolmaker_copilot/main.py`
-  - Knowledge Curator: `python agents/knowledge_curator/curate.py`
+  - Architect Genesis: `python factory_agents/architect_genesis/main.py`
+  - Toolmaker Copilot: `python factory_agents/toolmaker_copilot/main.py`
+  - Knowledge Curator: `python factory_agents/knowledge_curator/curate.py`
 
 Repository Structure
 This repository is organized to treat all agent components as version-controlled, production-grade assets.

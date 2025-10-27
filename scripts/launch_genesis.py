@@ -6,4 +6,4 @@ if rc != 0:
     sys.exit(rc)
 
 # If healthy, run the Genesis Architect crew
-sys.exit(subprocess.call([sys.executable, "agents/architect_genesis/main.py"]))
+sys.exit(subprocess.call([sys.executable, "factory_agents/architect_genesis/main.py"]))

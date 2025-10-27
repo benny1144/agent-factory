@@ -3,7 +3,7 @@
 .PHONY: start genesis validate validate-fix validate-kba audit-kba setup
 
 start:
-	@python scripts/startup_check.py && python agents/architect_genesis/main.py
+	@python scripts/startup_check.py && python factory_agents/architect_genesis/main.py
 
 # Backward-compatible alias
 genesis: start
