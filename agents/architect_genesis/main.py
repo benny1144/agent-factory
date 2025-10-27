@@ -243,7 +243,7 @@ class GenesisOrchestrator:
 
         try:
             proc = subprocess.Popen(
-                [sys.executable, "-m", "uvicorn", "agents.architect_genesis.intake_service:app", "--host", "0.0.0.0", "--port", str(p)],
+                [sys.executable, "-m", "uvicorn", "agents.architect_genesis.api:app", "--host", "0.0.0.0", "--port", str(p)],
                 cwd=str(self.repo_root),
                 env=env,
                 stdout=subprocess.DEVNULL,
@@ -499,4 +499,7 @@ def main():
     print(result)
 
 if __name__ == "__main__":
-    main()
+    # Autostart FastAPI listener for Genesis on port 5055
+    import uvicorn  # type: ignore
+    from agents.architect_genesis.api import app  # lazy import to avoid circulars
+    uvicorn.run(app, host="0.0.0.0", port=5055, log_level="info")

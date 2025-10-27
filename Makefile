@@ -35,3 +35,10 @@ setup:
 # Post-Cleanup Verification target
 verify-postcleanup:
 	@python scripts/post_cleanup_verification.py
+
+# Payload management: Archivist build via Genesis
+payload-validate:
+	@python scripts/send_archivist_build.py --validate payloads/archivist_creation_request.json
+
+payload-send:
+	@python scripts/send_archivist_build.py --send payloads/archivist_creation_request.json

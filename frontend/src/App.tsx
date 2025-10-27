@@ -5,12 +5,14 @@ import Agents from './pages/Agents'
 import Knowledge from './pages/Knowledge'
 import Logs from './pages/Logs'
 import JunieConsole from './pages/JunieConsole'
+import FederationDashboard from './pages/FederationDashboard'
 
 export default function App() {
   return (
     <div style={{ fontFamily: 'Inter, system-ui, Arial, sans-serif', padding: 16 }}>
       <nav style={{ display: 'flex', gap: 12, marginBottom: 16, borderBottom: '1px solid #eee', paddingBottom: 12 }}>
         <Link to="/dashboard">Dashboard</Link>
+        <Link to="/dashboard/federation">🌐 Federation</Link>
         <Link to="/agents">Agents</Link>
         <Link to="/knowledge">Knowledge</Link>
         <Link to="/logs">Logs</Link>
@@ -19,6 +21,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/federation" element={<FederationDashboard />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/knowledge" element={<Knowledge />} />
         <Route path="/logs" element={<Logs />} />

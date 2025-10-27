@@ -15,6 +15,7 @@ from .health import router as health_router
 # New integrated intelligence & observability routers
 from agent_factory.api import gpt_router as gpt_router
 from agent_factory.api import telemetry_router as telemetry_router
+from agent_factory.api import federation_router as federation_router
 
 # Prometheus metrics exporter
 try:
@@ -47,6 +48,8 @@ app.include_router(ui_router)
 # Mount GPT assistant and telemetry websocket routers
 app.include_router(gpt_router)
 app.include_router(telemetry_router)
+# Mount Federation router
+app.include_router(federation_router)
 # Mount health router
 app.include_router(health_router)
 
