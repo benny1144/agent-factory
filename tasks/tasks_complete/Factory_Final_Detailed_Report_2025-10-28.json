@@ -1,0 +1,252 @@
+{
+  "id": "Factory-Final-Report-2025-10-28",
+  "title": "Agent Factory — Detailed Operational Report and Risk Register",
+  "created_at": "2025-10-28T21:31:00",
+  "scope": "Consolidated operational snapshot covering Federation activation, Bridge daemon, PowerShell verification, Disagreements.ai health-check (Poetry), Archivist Phase 21 endpoints/tests, and Genesis Expansion activation with reflective loop.",
+  "summary": {
+    "highlights": [
+      "Federation context established (AgentFactoryExpert, Archy, Genesis, DashboardUI).",
+      "Bridge daemon online with heartbeat and JSONL control-plane logging (scripts/start_junie_bridge.py).",
+      "PowerShell verifier scripts in place: scripts/verify_federation.ps1, scripts/check_disagreements_health.ps1.",
+      "Poetry entrypoint added: poetry run check-health (scripts/check_health.py; pyproject.toml).",
+      "Archivist Phase 21: JWT federation endpoints, AutoGen bridge, unified metrics, tests.",
+      "Genesis Expansion: services/genesis/* stubs, reflective daemon wiring, audit and KB learning logs."
+    ],
+    "key_artifacts": [
+      "federation/context_manifest.json",
+      "logs/control_plane_activity.jsonl",
+      "governance/federation_audit.jsonl",
+      "logs/autogen_bridge.jsonl",
+      "logs/genesis_orchestration.jsonl",
+      "knowledge_base/index/*",
+      "tasks/reviews/Federation_Activation_Verification.md",
+      "tasks/tasks_complete/Archy-phase21patches.json",
+      "tasks/reviews/2025-10-28_knowledge_federation_review.md"
+    ]
+  },
+  "verification_map": [
+    {
+      "item": "Bridge Online event logged",
+      "path": "logs/control_plane_activity.jsonl",
+      "method": "Select-String 'Bridge Online'",
+      "status": "present_when_daemon_running"
+    },
+    {
+      "item": "Federation ping→response flow",
+      "path": "tasks/to_expert/Archy_Response_*.json",
+      "method": "Run scripts/verify_federation.ps1",
+      "status": "passes_on_local_run"
+    },
+    {
+      "item": "Federation audit",
+      "path": "governance/federation_audit.jsonl",
+      "method": "Tail file and check for ping entries",
+      "status": "present"
+    },
+    {
+      "item": "Poetry health-check",
+      "path": "build/health_logs/health_*.json",
+      "command": "poetry run check-health",
+      "status": "generates_json_offline_or_remote"
+    },
+    {
+      "item": "Archivist Phase 21 certification report",
+      "path": "reports/archivist_phase21_release_certification.json",
+      "status": "present"
+    },
+    {
+      "item": "Genesis reflective daemon log",
+      "path": "logs/genesis_orchestration.jsonl",
+      "status": "present_after_start"
+    },
+    {
+      "item": "Genesis learning KB entries",
+      "path": "knowledge_base/genesis_learning.jsonl",
+      "status": "runtime_generated"
+    }
+  ],
+  "evidence_paths": {
+    "federation": [
+      "federation/context_manifest.json",
+      "governance/federation_audit.jsonl",
+      "logs/control_plane_activity.jsonl",
+      "tasks/to_expert/Archy_Response_<timestamp>.json"
+    ],
+    "health_check": [
+      "scripts/check_health.py",
+      "scripts/check_disagreements_health.ps1",
+      "scripts/health_stub.json",
+      "pyproject.toml",
+      "build/health_logs/"
+    ],
+    "archivist_phase21": [
+      "factory_agents/archivist/extra_endpoints.py",
+      "services/autogen/bridge.py",
+      "factory_agents/archivist/reasoning_core.py",
+      "factory_agents/archivist/fastapi_server.py",
+      "tests/archivist/*",
+      "reports/archivist_phase21_release_certification.json"
+    ],
+    "genesis_expansion": [
+      "services/genesis/agent_designer.py",
+      "services/genesis/crew_builder.py",
+      "services/genesis/mission_runner.py",
+      "services/genesis/reflective_core.py",
+      "factory_agents/architect_genesis/main.py"
+    ]
+  },
+  "foreseeable_issues": [
+    {
+      "id": "AF-SEC-001",
+      "title": "Default/dev federation secret in prod",
+      "severity": "High",
+      "impact": "Unauthorized federation events",
+      "likelihood": "Medium",
+      "mitigation": "Set FEDERATION_JWT_SECRET in production and rotate regularly; enforce missing-secret startup guard.",
+      "owner": "Platform",
+      "status": "open"
+    },
+    {
+      "id": "AF-TIME-002",
+      "title": "JWT clock skew on exp/iat/nbf",
+      "severity": "Medium",
+      "impact": "False 401s during drifted time",
+      "likelihood": "Medium",
+      "mitigation": "Require NTP sync; consider 60s leeway in validation; add skew unit tests.",
+      "owner": "Backend",
+      "status": "planned"
+    },
+    {
+      "id": "AF-LOG-003",
+      "title": "Unbounded JSONL log growth",
+      "severity": "Medium",
+      "impact": "Disk usage and slow tooling",
+      "likelihood": "High",
+      "mitigation": "Size/age-based rotation; archival; CI guard on log size; document retention.",
+      "owner": "Ops",
+      "status": "open"
+    },
+    {
+      "id": "AF-PS-004",
+      "title": "PowerShell emoji/encoding breakage",
+      "severity": "Low",
+      "impact": "Verifier script parse errors",
+      "likelihood": "Medium",
+      "mitigation": "Use ASCII-only output; avoid emojis in PS1; set -Encoding utf8 when writing files.",
+      "owner": "Tooling",
+      "status": "fixed"
+    },
+    {
+      "id": "AF-OPT-005",
+      "title": "Optional deps missing (pyjwt, watchdog, sentence-transformers)",
+      "severity": "Low",
+      "impact": "Feature degradation; test skips",
+      "likelihood": "Medium",
+      "mitigation": "Guard imports; mark tests skip/xfail; document extras in README; pin minimal versions.",
+      "owner": "Backend",
+      "status": "open"
+    },
+    {
+      "id": "AF-NET-006",
+      "title": "Network LLM calls disabled by default",
+      "severity": "Low",
+      "impact": "Users expect online provider behavior",
+      "likelihood": "High",
+      "mitigation": "Document ALLOW_NETWORK_LLM flag; clearly label offline mode in outputs.",
+      "owner": "Docs",
+      "status": "open"
+    },
+    {
+      "id": "AF-MET-007",
+      "title": "Metrics duplication/races",
+      "severity": "Low",
+      "impact": "Inaccurate counters",
+      "likelihood": "Low",
+      "mitigation": "Atomic writes; simple file lock; dedupe guards in collectors.",
+      "owner": "Backend",
+      "status": "planned"
+    },
+    {
+      "id": "AF-PATH-008",
+      "title": "Windows vs POSIX path differences",
+      "severity": "Low",
+      "impact": "Path bugs in scripts/logs",
+      "likelihood": "Medium",
+      "mitigation": "Use pathlib everywhere; ensure colon-free timestamps; verify UTF-8 encoding.",
+      "owner": "Tooling",
+      "status": "open"
+    },
+    {
+      "id": "AF-SCHED-009",
+      "title": "Scheduler multi-instance duplicates",
+      "severity": "Low",
+      "impact": "Repeated compliance metrics writes",
+      "likelihood": "Low",
+      "mitigation": "Leader election or single-instance lock; include instance_id in metrics.",
+      "owner": "Backend",
+      "status": "open"
+    },
+    {
+      "id": "AF-GOV-010",
+      "title": "Claims logging hygiene",
+      "severity": "Medium",
+      "impact": "Over-logging sensitive claim fields",
+      "likelihood": "Low",
+      "mitigation": "Redact sensitive JWT fields; retention policy; audit review.",
+      "owner": "Security",
+      "status": "open"
+    },
+    {
+      "id": "AF-VER-011",
+      "title": "Time-based test flakiness",
+      "severity": "Low",
+      "impact": "Intermittent test failures",
+      "likelihood": "Medium",
+      "mitigation": "Deterministic tokens; inject clock tolerance; freeze time in unit tests.",
+      "owner": "QA",
+      "status": "planned"
+    },
+    {
+      "id": "AF-REG-012",
+      "title": "Genesis listener and bridge overlap",
+      "severity": "Low",
+      "impact": "Confusion over who responds; duplicated responses",
+      "likelihood": "Low",
+      "mitigation": "Document roles; process files once by (name, mtime); consider routing guard.",
+      "owner": "Platform",
+      "status": "open"
+    }
+  ],
+  "security_governance": {
+    "secrets": "No secrets committed. Use env vars (.env locally) including FEDERATION_JWT_SECRET and provider API keys.",
+    "offline_defaults": "Network LLM calls are OFF by default; deterministic local responses used unless ALLOW_NETWORK_LLM=1.",
+    "auditability": "Append-only JSONL logs in logs/ and governance/; federation events recorded in both planes.",
+    "data_boundaries": "Knowledge base and personas remain local; no external exfiltration by default."
+  },
+  "ci_cd_notes": {
+    "dependencies": ["pyjwt (JWT)", "pytest (tests)", "poetry-core (entrypoint)", "optional: requests, watchdog, sentence-transformers"],
+    "commands": [
+      "poetry install",
+      "poetry run check-health",
+      "python -m services.autogen.bridge --test --task sample",
+      "powershell -ExecutionPolicy Bypass -File scripts/verify_federation.ps1",
+      "pytest tests/archivist -v"
+    ],
+    "env_flags": ["ALLOW_NETWORK_LLM", "DISAGREEMENTS_API_URL", "FEDERATION_JWT_SECRET"]
+  },
+  "next_actions": [
+    {"priority": 1, "action": "Add log rotation for JSONL files", "owner": "Ops", "acceptance": "Rotation enabled; size < 50MB per log by default."},
+    {"priority": 2, "action": "JWT leeway and skew tests", "owner": "Backend", "acceptance": "Unit tests cover ±60s skew; no false negatives."},
+    {"priority": 3, "action": "Bridge failure-path tests", "owner": "QA", "acceptance": "Simulated invalid JSON and IO errors logged with no crash."},
+    {"priority": 4, "action": "Docs for offline/online provider modes", "owner": "Docs", "acceptance": "README section with examples and flags."},
+    {"priority": 5, "action": "Optional watcher integration guidance", "owner": "Docs", "acceptance": "Instructions for watchdog extra and polling fallback."}
+  ],
+  "meta": {
+    "repo_root": "C:/Users/benny/IdeaProjects/agent-factory",
+    "components": {
+      "bridge_script": "scripts/start_junie_bridge.py",
+      "poetry_entrypoint": "pyproject.toml:[tool.poetry.scripts] check-health",
+      "archivist_phase21_report": "reports/archivist_phase21_release_certification.json"
+    }
+  }
+}

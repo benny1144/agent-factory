@@ -1,0 +1,33 @@
+# Aggregated master requirements for Agent Factory (Python 3.11+)
+# Derived from root and agents/* requirements; pin via pip-compile to generate requirements.lock
+
+# Core & backend
+pytest
+pytest-cov
+sqlalchemy
+python-dotenv
+fastapi
+uvicorn
+httpx
+prometheus-client
+websockets
+python-multipart
+pyyaml
+
+# Agents / LLM tooling
+crewai
+crewai-tools
+litellm
+
+# LangChain & vector stores (as used across agents)
+langchain
+langchain-community
+langchain-google-genai
+langchain-faiss
+langchain-text-splitters
+faiss-cpu
+
+# Google generative AI (as referenced by agents)
+google-ai-generativelanguage>=0.7,<1
+google-generativeai>=0.7,<1
+sqlalchemy>=2.0.0

@@ -1,0 +1,93 @@
+---
+version: 1.0
+last_updated: 2025-10-27
+maintainer: Agent Factory Governance Council
+document_type: Ethical Drift Monitor Configuration
+category: Governance
+---
+
+# 🜂 Ethical Drift Monitor — Configuration File
+
+## Purpose
+The Ethical Drift Monitor (EDM) safeguards the moral and behavioral alignment of all agents and federated datasets. It measures semantic, ethical, and procedural deviations against the Golden Dataset Baseline defined by EthicFlow.
+
+---
+
+## I. Baseline Configuration
+baseline_dataset: knowledge_base/datasets/Golden_Dataset_v1.0.jsonl
+baseline_embedding_model: openai/text-embedding-3-large
+baseline_version: 1.0
+embedding_dimensions: 3072
+
+comparison_model: gpt-5-turbo
+semantic_similarity_metric: cosine
+ethical_alignment_metric: kl_divergence
+procedural_alignment_metric: jaccard_index
+
+---
+
+## II. Threshold Parameters
+semantic_drift_threshold: 0.15
+ethical_drift_threshold: 0.10
+procedural_drift_threshold: 0.08
+
+alert_thresholds:
+  minor: 0.05
+  moderate: 0.10
+  severe: 0.20
+
+---
+
+## III. Evaluation Schedule
+scan_frequency: weekly
+report_output: logs/ethical_drift_reports/
+archive_retention_days: 90
+auto_escalate_on_severe_drift: true
+
+---
+
+## IV. Detection Pipeline
+steps:
+  - Step 1: Load baseline dataset embeddings from Golden_Dataset_v1.0.jsonl
+  - Step 2: Embed new agent or dataset outputs using same embedding model.
+  - Step 3: Compare pairwise similarity using cosine distance.
+  - Step 4: Compute ethical alignment variance using KL divergence.
+  - Step 5: Flag entries exceeding thresholds.
+  - Step 6: Log results to /logs/ethical_drift_scan_<timestamp>.json.
+  - Step 7: If drift > threshold, send [ALERT] to Human Firewall and Genesis.
+
+---
+
+## V. Governance Workflow
+- **Archivist:** Runs weekly EDM scan and compiles report.
+- **Genesis:** Reviews flagged sections and drafts correction proposals.
+- **Firewall:** Reviews and authorizes any corrective actions.
+- **Junie:** Implements corrective dataset or code patch post-approval.
+
+---
+
+## VI. Alert Structure
+alert_template:
+  id: ALERT-<TIMESTAMP>
+  severity: minor | moderate | severe
+  description: >
+    Drift detected in <dataset_or_agent>. Ethical variance above threshold.
+  source: ethical_drift_monitor.yaml
+  destination: logs/ethical_drift_alerts.jsonl
+  action_required: true
+
+---
+
+## VII. Integration Hooks
+integrations:
+  - federation_audit_digest_template.json
+  - governance/federation_policies.yaml
+  - knowledge_base/datasets/Golden_Dataset_v1.0.jsonl
+
+---
+
+## VIII. Notes
+- Drift is calculated as a weighted average of semantic, ethical, and procedural metrics.
+- The EDM supports both proactive and reactive monitoring.
+- Genesis and Firewall jointly approve threshold adjustments.
+- Archivist can generate visual drift maps for governance reviews.

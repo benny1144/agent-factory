@@ -1,0 +1,88 @@
+{
+  "title": "Archivist Phase 21 — Finalization and Release Certification",
+  "ts": "2025-10-28T04:02:00Z",
+  "governance_firewall": {
+    "manual_approved": true,
+    "source": "tasks/Archivist_Phase21_Finalization_and_Release_Certification_Task.json"
+  },
+  "edits_summary": [
+    {
+      "path": "factory_agents/archivist/extra_endpoints.py",
+      "change": "Replaced HMAC guard with JWT federation (HS256, exp/iat/nbf validation), added /autogen/run endpoint, extended /metrics to include compliance counters."
+    },
+    {
+      "path": "services/autogen/bridge.py",
+      "change": "Created AutoGenBridge with structured trace logging (logs/autogen_bridge.jsonl) and CLI `python -m services.autogen.bridge --test`."
+    },
+    {
+      "path": "services/autogen/__init__.py",
+      "change": "Package marker exporting AutoGenBridge."
+    },
+    {
+      "path": "services/__init__.py",
+      "change": "Package marker."
+    },
+    {
+      "path": "factory_agents/archivist/reasoning_core.py",
+      "change": "Added llm_generate() provider router (openai/gemini/groq/local) with deterministic offline fallback; hardened optional dependency handling for sentence-transformers in drift monitor."
+    },
+    {
+      "path": "factory_agents/archivist/fastapi_server.py",
+      "change": "Added daily compliance verification scheduler writing logs/compliance_metrics.json and ensured extra_endpoints router is mounted."
+    }
+  ],
+  "new_endpoints": [
+    {
+      "method": "POST",
+      "path": "/federation/broadcast",
+      "security": "Authorization: Bearer <JWT HS256>, validated (exp, iat, nbf)",
+      "logs": ["logs/federation_activity.jsonl", "compliance/audit_log/federation_updates.csv"]
+    },
+    {
+      "method": "POST",
+      "path": "/federation/subscribe",
+      "security": "open (append-only registry)",
+      "logs": ["governance/federation_subscribers.txt"]
+    },
+    {
+      "method": "POST",
+      "path": "/autogen/run",
+      "security": "none (internal orchestration)",
+      "logs": ["logs/autogen_bridge.jsonl"]
+    },
+    {
+      "method": "GET",
+      "path": "/metrics",
+      "notes": "Prometheus-style unified metrics including reflective sync and compliance counters"
+    }
+  ],
+  "unit_tests": [
+    "tests/archivist/test_autogen_bridge.py",
+    "tests/archivist/test_federation_jwt.py",
+    "tests/archivist/test_llm_generate.py (added in this phase)"
+  ],
+  "verification_checklist": {
+    "logs": [
+      "logs/federation_activity.jsonl contains JWT entries after POST /federation/broadcast",
+      "logs/autogen_bridge.jsonl records orchestration traces after /autogen/run or CLI",
+      "logs/compliance_metrics.json exists and updates daily from scheduler"
+    ],
+    "reports": [
+      "reports/archivist_phase21_release_certification.json present (this file)"
+    ],
+    "metrics": [
+      "curl localhost:5065/metrics shows archivist_compliance_ledger_entries_total and archivist_compliance_firewall_events_total"
+    ],
+    "ci": [
+      "pytest tests/archivist -v passes (requires dev dependencies installed)",
+      "python -m services.autogen.bridge --test prints deterministic JSON"
+    ]
+  },
+  "curl_examples": [
+    "curl -X POST localhost:5065/federation/broadcast -H 'Authorization: Bearer <jwt>' -H 'Content-Type: application/json' -d '{\"event\":\"test\",\"data\":{\"hello\":\"world\"}}'",
+    "curl -X POST localhost:5065/autogen/run -H 'Content-Type: application/json' -d '{\"task\":\"sample\"}'",
+    "curl localhost:5065/metrics"
+  ],
+  "status": "ready",
+  "notes": "Phase 21 tasks implemented with deterministic offline fallbacks to respect Human Firewall and CI portability. No secrets committed."
+}

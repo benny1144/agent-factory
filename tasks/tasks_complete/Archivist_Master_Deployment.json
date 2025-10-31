@@ -1,0 +1,52 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Archivist Full Lifecycle Deployment (Phases 1–19)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_directory": "tasks/",
+      "governance": "Human Firewall and Compliance Kernel must be active"
+    },
+    "Plan": [
+      "1) Validate repository health and ensure all 19 phase JSON files exist under /tasks/.",
+      "2) Begin sequential execution of each phase in order, verifying completion before proceeding to the next.",
+      "3) After each phase, run its verification steps and log outcomes to /logs/deployment_audit.log.",
+      "4) Trigger Governance Checkpoint after Phases 5, 10, 15, and 19 for Firewall approval.",
+      "5) Rollback to previous verified phase on failure and flag audit status as 'rejected'.",
+      "6) On completion, generate final deployment summary under /compliance/audit_kernel/archivist_deployment_report.json.",
+      "7) Verify ledger chain integrity via 'audit verify' command and append deployment event to ledger."
+    ],
+    "ExecutionOrder": [
+      {"Phase": 1, "Task": "Phase_1_Core_Foundation.json", "Objective": "Establish governance and reasoning core."},
+      {"Phase": 2, "Task": "Phase_2_FastAPI_and_Chat_Integration.json", "Objective": "Integrate chat server endpoints."},
+      {"Phase": 3, "Task": "Phase_3_Reasoning_Core_Expansion.json", "Objective": "Enhance reasoning and fallback APIs."},
+      {"Phase": 4, "Task": "Phase_4_File_Access_Security.json", "Objective": "Enable governed read/write access."},
+      {"Phase": 5, "Task": "Phase_5_Persistent_Memory_and_Contextual_Recall.json", "Objective": "Implement multi-session recall memory."},
+      {"Phase": 6, "Task": "Phase_6_Procedural_Memory_and_Agent_Simulation.json", "Objective": "Introduce agent simulation capabilities."},
+      {"Phase": 7, "Task": "Phase_7_Environment_and_Launch_Automation.json", "Objective": "Enable one-command startup and key environment persistence."},
+      {"Phase": 8, "Task": "Phase_8_Self_Indexing_and_Auto_Documentation.json", "Objective": "Automate file indexing and document summarization."},
+      {"Phase": 9, "Task": "Phase_9_Health_and_Diagnostic_Engine.json", "Objective": "Introduce self-diagnostic and configuration health checks."},
+      {"Phase": 10, "Task": "Phase_10_Autonomous_Crew_Simulation_Sandbox.json", "Objective": "Establish GPT-enriched crew sandbox with reflective logging."},
+      {"Phase": 11, "Task": "Phase_11_Self_Governance_and_Risk_Classification.json", "Objective": "Implement internal risk awareness engine."},
+      {"Phase": 12, "Task": "Phase_12_Ethical_Drift_Monitor_and_Persona_Integrity.json", "Objective": "Add persona alignment and drift monitoring."},
+      {"Phase": 13, "Task": "Phase_13_Curated_Knowledge_Auto_Promotion.json", "Objective": "Enable auto-curation and Genesis request creation."},
+      {"Phase": 14, "Task": "Phase_14_Reflective_Sync_and_Auto_Index_Update.json", "Objective": "Implement vector memory reindexing system."},
+      {"Phase": 15, "Task": "Phase_15_Human_Firewall_Approval_Layer.json", "Objective": "Establish manual approval layer for risk governance."},
+      {"Phase": 16, "Task": "Phase_16_Compliance_Audit_Kernel.json", "Objective": "Create immutable audit ledger and verification chain."},
+      {"Phase": 17, "Task": "Phase_17_Long_Term_Vector_Memory_Expansion.json", "Objective": "Expand persistent vector memory for long-term recall."},
+      {"Phase": 18, "Task": "Phase_18_External_Intelligence_Connectors.json", "Objective": "Integrate governed external intelligence APIs."},
+      {"Phase": 19, "Task": "Phase_19_Federated_Learning_and_Insight_Sharing.json", "Objective": "Enable anonymized insight exchange with Genesis."}
+    ],
+    "Verification": [
+      "All 19 phases execute sequentially without governance violations.",
+      "Each phase writes completion log entry with success hash.",
+      "Audit ledger reflects final deployment as 'verified' with chain integrity intact.",
+      "Deployment summary saved to /compliance/audit_kernel/archivist_deployment_report.json with phase timestamps."
+    ],
+    "Rollback": [
+      "If any phase fails, execute rollback command from the last verified phase JSON.",
+      "Re-run verification of the restored phase and log recovery result to /logs/deployment_audit.log.",
+      "If rollback chain breaks, restore full environment from prior ledger state snapshot." 
+    ]
+  }
+}

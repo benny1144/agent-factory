@@ -1,0 +1,52 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Expand Crew Simulation into Autonomous Reasoning Sandbox (Archivist Phase 10)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/simulation_core.py",
+        "factory_agents/archivist/reasoning_core.py"
+      ]
+    },
+    "Plan": [
+      "1) Upgrade simulation_core.py to include an autonomous multi-round simulation environment using GPT-5 reasoning.",
+      "2) Introduce a new function simulate_autonomous_crew(topic: str, rounds: int = 3) that runs N iterative reasoning rounds between virtual agents (Strategist, Engineer, Philosopher).",
+      "3) Use OpenAI API (from reasoning_core) to simulate inter-agent dialogue, where each round refines the group’s collective output.",
+      "4) Store each full simulation transcript as JSON under /logs/simulations/autonomous/ with timestamp and round count.",
+      "5) Maintain strict sandboxing: text reasoning only, no network or file writes beyond logs.",
+      "6) Add Markdown formatting for structured output (headers per round, agents labeled, conclusions summarized).",
+      "7) Add 'simulate autonomous crew <topic>' command to fastapi_server.py.",
+      "8) Verify all simulations include timestamps, structured dialogue, and summary conclusions."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/simulation_core.py",
+        "Change": """# === PATCH START ===\nimport os, datetime, json\nfrom openai import OpenAI\n\nclass AutonomousCrew:\n    def __init__(self):\n        self.client = OpenAI()\n        self.agents = [\n            ('Athena', 'Strategist'),\n            ('Daedalus', 'Engineer'),\n            ('Socrates', 'Philosopher')\n        ]\n\n    def simulate_autonomous_crew(self, topic: str, rounds: int = 3):\n        \"\"\"Simulate multi-round reasoning dialogue among virtual agents.\"\"\"\n        log_dir = os.path.join('logs', 'simulations', 'autonomous')\n        os.makedirs(log_dir, exist_ok=True)\n        timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H-%M-%SZ')\n        transcript = []\n        context = f'Topic: {topic}'\n        \n        for r in range(rounds):\n            round_dialogue = []\n            for name, role in self.agents:\n                prompt = f"You are {name}, the {role}. Round {r+1} of discussion on '{topic}'. Context so far:\n{context}\nRespond concisely with one paragraph of reasoning."\n                try:\n                    resp = self.client.chat.completions.create(\n                        model='gpt-5',\n                        messages=[{'role': 'system', 'content': 'Multi-agent reasoning sandbox'}, {'role': 'user', 'content': prompt}],\n                        max_tokens=250\n                    )\n                    reply = resp.choices[0].message.content.strip()\n                except Exception as e:\n                    reply = f'⚠️ API Error for {name}: {e}'\n                round_dialogue.append(f"[{role}] {name}: {reply}")\n            transcript.append({'round': r+1, 'dialogue': round_dialogue})\n            context += '\n' + '\n'.join(round_dialogue)\n        summary = f"In conclusion, the crew collectively explored {topic} through {rounds} reasoning rounds."\n        file_path = os.path.join(log_dir, f'autonomous_sim_{timestamp}.json')\n        with open(file_path, 'w', encoding='utf-8') as f:\n            json.dump({'topic': topic, 'rounds': rounds, 'transcript': transcript, 'summary': summary}, f, indent=2)\n        markdown = f"🜂 **Autonomous Crew Simulation**\\n## Topic: {topic}\\n" + '\\n'.join([f"### Round {r['round']}\\n" + '\\n'.join(['- ' + d for d in r['dialogue']]) for r in transcript]) + f"\\n\\n**Summary:** {summary}\\n\\nAll data logged: {file_path}"\n        return markdown\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nif message.lower().startswith('simulate autonomous crew '):\n    topic = message.replace('simulate autonomous crew ', '').strip()\n    from factory_agents.archivist.simulation_core import AutonomousCrew\n    sim = AutonomousCrew()\n    reply = sim.simulate_autonomous_crew(topic, rounds=3)\n    return {'reply': format_response(reply)}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server.",
+      "2) Send message: 'simulate autonomous crew the evolution of AI governance'.",
+      "3) Confirm Markdown output shows 3 rounds with labeled agents.",
+      "4) Verify transcript JSON saved in /logs/simulations/autonomous/.",
+      "5) Validate summary and structure integrity in file.",
+      "6) Check API error handling for missing keys or model fallback.",
+      "7) Confirm sandbox runs with no unintended external effects."
+    ],
+    "Verification": [
+      "Multi-agent simulation completes 3 coherent reasoning rounds.",
+      "Logs created with full transcript and metadata.",
+      "Markdown response clearly formatted with headers and summary.",
+      "Governance verified: no code execution or network side effects."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/simulation_core.py",
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

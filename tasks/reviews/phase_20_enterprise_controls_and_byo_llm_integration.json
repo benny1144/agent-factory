@@ -1,0 +1,11 @@
+{
+  "phase": 20,
+  "title": "Enterprise Controls and BYO-LLM Integration",
+  "action": "Implement tenant LLM policies and selector UI.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Implement tenant LLM policies and selector UI."
+  }
+}

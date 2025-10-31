@@ -1,0 +1,25 @@
+version: '1.0'
+generated_by: utils/knowledge_indexer.py
+last_updated: '2025-10-28T16:30:09.989682+00:00'
+agents:
+- name: archivist
+  root: knowledge_base/agents/archivist
+  docs: knowledge_base/agents/archivist/docs
+  persona: knowledge_base/agents/archivist/persona
+  research: knowledge_base/agents/archivist/research
+  memory: knowledge_base/agents/archivist/memory
+  last_updated: '2025-10-28T16:30:09.975447+00:00'
+- name: genesis
+  root: knowledge_base/agents/genesis
+  docs: knowledge_base/agents/genesis/docs
+  persona: knowledge_base/agents/genesis/persona
+  research: knowledge_base/agents/genesis/research
+  memory: knowledge_base/agents/genesis/memory
+  last_updated: '2025-10-28T16:30:09.982329+00:00'
+- name: junie
+  root: knowledge_base/agents/junie
+  docs: knowledge_base/agents/junie/docs
+  persona: knowledge_base/agents/junie/persona
+  research: knowledge_base/agents/junie/research
+  memory: knowledge_base/agents/junie/memory
+  last_updated: '2025-10-28T16:30:09.989662+00:00'

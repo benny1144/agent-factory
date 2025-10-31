@@ -1,0 +1,1 @@
+{"ts": "2025-10-28T12:40:15Z", "agent_id": "AgentFactoryExpert", "event": "federation_registered", "claims": {}, "data": {"manifest": "/federation/context_manifest.json", "link": ["AgentFactoryExpert", "Genesis", "Archy", "DashboardUI"]}, "source": "setup_task"}

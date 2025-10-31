@@ -1,0 +1,56 @@
+{
+  "title": "Archivist Phase 21 — Final Compliance, Federation & AutoGen Integration",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or release/archivist-complete",
+    "prior_task": "Archivist_Phase20_Certification_and_Final_Test_Task.json completed successfully",
+    "governance_firewall": "manual_approved: true",
+    "dependencies": ["PyJWT", "cryptography", "FAISS", "Qdrant"],
+    "environment": "All required directories present and writable"
+  },
+  "plan": {
+    "steps": [
+      "1. Implement Vector Memory Migration Utility at /utils/migrate_memory_to_vector.py for embedding generation and validation.",
+      "2. Create LLM Plugin System under /factory_agents/archivist/plugins/ with openai.py, gemini.py, and groq.py connectors.",
+      "3. Update reasoning_core.py to dynamically select LLM provider based on api_keys.yaml configuration.",
+      "4. Replace HMAC federation validation with JWT-based security using PyJWT and log events to /logs/federation_activity.jsonl.",
+      "5. Implement AutoGenBridge class in /services/autogen/bridge.py for agent orchestration and logging.",
+      "6. Add /autogen/run endpoint to extra_endpoints.py for executing AutoGenBridge tasks.",
+      "7. Schedule daily compliance ledger verification task in fastapi_server.py and expose compliance metric on /metrics endpoint.",
+      "8. Run integration and validation tests for all new components and verify logs and metrics integrity."
+    ]
+  },
+  "edits": [
+    {"path": "utils/migrate_memory_to_vector.py", "change": "Add script to read Golden Dataset, embed, and push to Qdrant/FAISS with similarity validation."},
+    {"path": "factory_agents/archivist/plugins/", "change": "Add openai.py, gemini.py, groq.py plugin connectors."},
+    {"path": "factory_agents/archivist/reasoning_core.py", "change": "Add provider selection logic for plugin integration."},
+    {"path": "factory_agents/archivist/extra_endpoints.py", "change": "Replace HMAC with JWT federation validation and add /autogen/run endpoint."},
+    {"path": "services/autogen/bridge.py", "change": "Add AutoGenBridge class with task orchestration and logging."},
+    {"path": "factory_agents/archivist/fastapi_server.py", "change": "Schedule compliance ledger verification background task."}
+  ],
+  "tests": [
+    "python utils/migrate_memory_to_vector.py --validate",
+    "pytest tests/archivist/test_plugins.py -v",
+    "curl -X POST localhost:5065/federation/broadcast -H 'Authorization: Bearer <jwt>' -d '{\\\"event\\\":\\\"test\\\"}'",
+    "python -m services.autogen.bridge --test",
+    "curl localhost:5065/metrics"
+  ],
+  "verification": {
+    "success": [
+      "/logs/vector_migration.jsonl created with >0.95 similarity score.",
+      "/logs/federation_activity.jsonl logs valid JWT events.",
+      "/logs/autogen_bridge.jsonl records orchestration traces.",
+      "/governance/compliance_ledger.jsonl verified daily and metric updated.",
+      "/metrics endpoint shows compliance and drift metrics.",
+      "CI pipeline passes all tests successfully."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "git checkout HEAD~1 -- utils/migrate_memory_to_vector.py services/autogen/bridge.py",
+      "rm -rf factory_agents/archivist/plugins/",
+      "Revert extra_endpoints.py and fastapi_server.py to prior commit."
+    ]
+  },
+  "result": "Archy achieves Phase 21 Full Certification, completing all compliance, federation, and AutoGen integrations, and is fully ready for Genesis orchestration and dashboard deployment."
+}

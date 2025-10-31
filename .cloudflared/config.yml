@@ -1,0 +1,10 @@
+tunnel: 18a7ac5d-4150-44d5-9c1b-fe3ace360214
+credentials-file: C:\Users\benny\.cloudflared\18a7ac5d-4150-44d5-9c1b-fe3ace360214.json
+
+ingress:
+  - hostname: gpt-ide.disagreements.ai
+    service: http://127.0.0.1:8000
+  - service: http_status:404
+
+warp-routing:
+  enabled: false

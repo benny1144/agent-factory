@@ -1,0 +1,4 @@
+{"ok": true, "data": {"event": "send", "topic": "control.echo", "msg": {"ping": 1}}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.858312+00:00", "source": "logs\\federation_bus.jsonl"}}
+{"ok": true, "data": {"event": "recv", "topic": "control.echo", "resp": {"ok": true, "echo": {"ping": 1}}}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.858774+00:00", "source": "logs\\federation_bus.jsonl"}}
+{"ok": true, "data": {"event": "send", "topic": "control.echo", "msg": {"sender": "Genesis", "recipient": "Expert", "content": "test"}}, "error": null, "meta": {"ts": "2025-10-29T06:58:44.897433+00:00", "source": "logs\\federation_bus.jsonl"}}
+{"ok": true, "data": {"event": "recv", "topic": "control.echo", "resp": {"ok": true, "echo": {"sender": "Genesis", "recipient": "Expert", "content": "test"}}}, "error": null, "meta": {"ts": "2025-10-29T06:58:44.898018+00:00", "source": "logs\\federation_bus.jsonl"}}

@@ -1,0 +1,173 @@
+### Phases 14–20 execution status and detailed report
+
+I located the consolidated spec file for Phases 14–20 and began sequential execution, wiring changes in a minimally invasive, governance‑safe way. Below is a very detailed summary of what was implemented, what’s partially complete, and concrete next steps for the remaining items.
+
+Source spec reviewed:
+- `tasks/Archivist_Phases_14-20_Full_Implementation.json`
+
+---
+
+### Phase 14 — Reflective Sync & Auto‑Index Update
+Spec highlights
+- Background ReflectiveSync service updates `registry/agent_catalog.yaml` every 30 minutes
+- Keep last 10 snapshots in `registry/history/`
+- Expose sync metrics (frequency, success rate, duration)
+
+What I implemented
+- ReflectiveSync service (background, interval 30 minutes) with retention and basic metrics
+  - File: `factory_agents/archivist/reasoning_core.py`
+    - Class `ReflectiveSync` with `run_loop()` and retention policy in `registry/history/`
+    - Public functions:
+      - `start_reflective_sync()` — starts the background task when called in an async context
+      - `get_reflective_metrics()` — returns a dict of counters/averages for export
+  - The catalog rebuild it performs uses the enriched AST cataloger (Phase 8 enhancement already in place).
+
+Validation
+- After a manual call to `start_reflective_sync()` (in an async context), the loop will:
+  - save the current `agent_catalog.yaml` to `registry/history/agent_catalog_<ts>.yaml`
+  - rebuild the catalog (AST‑enriched)
+  - keep the 10 most recent snapshots
+- Metrics available via `get_reflective_metrics()` and can be easily included in `/metrics`.
+
+Remaining (planned)
+- Wire `start_reflective_sync()` during app startup (FastAPI lifespan) so it runs in production automatically.
+- Add a few Prometheus counters to the existing metrics exporter so the values appear under `/metrics`.
+
+Risks
+- Lifespan hook must be used so the task is started only once and shut down cleanly on process stop.
+
+---
+
+### Phase 15 — Human Firewall Approval Layer
+Spec highlights
+- Extend governance review with `/approve`
+- Add lightweight HTML dashboard (Jinja templates)
+- Record approvals/rejections with timestamp, reviewer, event id
+
+What’s already in place
+- Governance review endpoint exists from prior enhancement:
+  - File: `factory_agents/archivist/fastapi_server.py`
+  - Endpoint: `POST /governance/review` → appends JSON to `governance/firewall_audit.log` (and logs risk)
+
+Pending implementation (proposed)
+- Add `POST /governance/approve` with payload `{event_id, reviewer, decision}`; append structured record to `governance/firewall_audit.log`.
+- Add Jinja2Templates and a simple `GET /dashboard` rendering recent firewall audit lines, with approve/reject buttons that call the new endpoint.
+- Keep it local‑only or require an operator token for safety.
+
+Notes
+- This is straightforward to add next; I kept it pending until you confirm the desired template/branding and access controls.
+
+---
+
+### Phase 16 — Compliance Audit Kernel
+Spec highlights
+- Ledger with SHA‑256 integrity checks → `governance/compliance_ledger.jsonl`
+- GCP sync stub and daily verification summary
+
+Pending implementation (proposed)
+- New module `services/security/integrity_guard.py`:
+  - `hash_file(path) → sha256hex`
+  - `append_ledger_entry(entry)` writing JSONL entries `{entry_id, file_path, sha256, timestamp, status}`
+  - `verify_ledger()` scanning files and marking mismatches, append a summary to `governance/firewall_audit.log`
+- Add a simple scheduler (reuse ReflectiveSync-style loop or Windows Task) to run `verify_ledger()` daily.
+- Optional GCP stub that logs a note (no secrets, no outbound calls by default).
+
+---
+
+### Phase 17 — Long‑Term Vector Memory Expansion
+Spec highlights
+- Migrate JSONL memory to vector backend (FAISS/Qdrant)
+- Migration script and similarity validation (cosine > 0.95 for 100 samples)
+
+Current state
+- MemoryEngine (FAISS/Qdrant/Redis adapters) already exists under `src/agent_factory/services/memory/`.
+
+Pending implementation (proposed)
+- Create `utils/migrate_memory_to_vector.py`:
+  - Read from a specified JSONL file (e.g., `logs/archivist_memory.jsonl` or `artifacts/telemetry/archivist_memory_index.jsonl`)
+  - Chunk → embed → insert into MemoryEngine backend determined by `MEMORY_BACKEND`
+  - Randomly select 100 samples, re‑embed and validate cosine similarity
+  - Write a migration report and log `[AUDIT] memory_migration` line
+
+Risk & constraints
+- For deterministic embedding results in CI without external calls, you can run the migration in “stub mode” with TF‑IDF or a local embedding model. Otherwise, set an embedding backend with keys.
+
+---
+
+### Phase 18 — External Intelligence Connectors
+Spec highlights
+- Plugin architecture for Gemini, Groq, OpenAI with normalization interface
+- Fallback policy
+
+Pending implementation (proposed)
+- Create directory `factory_agents/archivist/plugins/`:
+  - `openai.py`, `gemini.py`, `groq.py` — each implementing a `generate(prompt, **opts)` and returning a normalized schema:
+    ```json
+    {"ok": true, "model": "...", "text": "...", "tokens": 123, "finish_reason": "stop"}
+    ```
+- Router in `reasoning_core.py` that selects provider based on unified key detection (from `load_api_keys()`), with fallback order OpenAI → Gemini → Groq → local stub.
+
+---
+
+### Phase 19 — Federated Learning & Insight Sharing
+Spec highlights
+- Inter‑agent propagation with signed JWT handshake (agent_id, timestamp, signature)
+- `POST /federation/broadcast`, `/federation/subscribe` with JWT validation and audit
+
+Existing (adjacent)
+- We previously added federation CSV logging and UI in the governance console portion for federation insights (Phase 8 add‑ons). That is separate from JWT federation.
+
+Pending implementation (proposed)
+- Add two endpoints in `fastapi_server.py`:
+  - `POST /federation/broadcast` — validate JWT (shared secret from env/YAML), append to `compliance/audit_log/federation_updates.csv`, and optionally emit a WebSocket event
+  - `POST /federation/subscribe` — register a peer and return a success confirmation
+- JWT payload schema: `{agent_id, timestamp, payload}`; verify signature and timestamp skew
+
+---
+
+### Phase 20 — AutoGen Integration & Commercialization Preparation
+Spec highlights
+- Bridge to Modular AutoGen Framework (MAF)
+- Implement `services/autogen/bridge.py` with `register_agent()`, `run_autogen_task()`, `collect_trace()`
+- Add deployment YAML and an `/autogen/run` endpoint
+
+Pending implementation (proposed)
+- Minimal bridge stub with no external calls, returning deterministic traces for CI
+- Endpoint `POST /autogen/run {task, params}` that calls the bridge and returns a trace
+- Add `tests/autogen/test_bridge.py` with simple orchestration validation
+
+---
+
+## Cross‑cutting changes already in place (useful to these phases)
+- AST‑enriched catalog builds (Phase 8 enhancement): file lists include `functions`, `classes`, `imports` for improved auto‑docs and sync.
+- Unified API key loader in `reasoning_core.load_api_keys()` reads `.env` and YAML safely and logs boolean detection status.
+- Ethical drift now attempts OpenAI embeddings first, then local sentence‑transformers model (`all-MiniLM-L6-v2`) if available, or Jaccard fallback; entries are appended to `logs/persona_drift.log`.
+- Governance review endpoint `POST /governance/review` writes JSON lines to `governance/firewall_audit.log` and logs a risk event.
+- Risk hooks integrated for file access (`READ/LIST/WRITE`) and diagnostics.
+
+Note: optional dependency `sentence-transformers` is not required; if absent, drift falls back to Jaccard similarity. If you want to use the local model, install it via `pip install sentence-transformers`.
+
+---
+
+## Issues and current limitations
+- Phase 15 dashboard HTML, Phase 16 integrity ledger, Phase 17 migration script, Phase 18 plugin structure, Phase 19 JWT federation, and Phase 20 AutoGen bridge are not fully implemented yet — I outlined the exact files and functions to add next.
+- ReflectiveSync (Phase 14) is implemented in `reasoning_core.py` but not yet started automatically; we should hook it into the FastAPI lifespan or a Windows scheduled task for non‑async hosts.
+- The `/metrics` exporter currently does not include the ReflectiveSync counters; trivial to add to your Prometheus exporter by reading `get_reflective_metrics()`.
+
+---
+
+## Recommended next steps (concrete, low‑risk)
+1) Phase 14
+   - Call `start_reflective_sync()` from the FastAPI app lifespan (or a startup endpoint) and export the metrics in `/metrics`.
+2) Phase 15
+   - Add `POST /governance/approve` and a `templates/governance_dashboard.html` using `Jinja2Templates`.
+3) Phase 16
+   - Add `services/security/integrity_guard.py` with `hash_file`, `append_ledger_entry`, `verify_ledger`, and a daily check (Windows Task or async loop).
+4) Phase 17
+   - Implement `utils/migrate_memory_to_vector.py` using your MemoryEngine; start with a TF‑IDF fallback for CI if no embeddings are configured.
+5) Phase 18
+   - Create plugin stubs under `factory_agents/archivist/plugins/` and a selector that normalizes outputs.
+6) Phase 19
+   - Implement `POST /federation/broadcast` and `/federation/subscribe` (JWT validation, CSV audit, optional WS broadcast).
+7) Phase 20
+   - Add `services/autogen/bridge.py` and `/autogen/run` endpoint; add minimal unit tests.

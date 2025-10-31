@@ -1,0 +1,212 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "scope": "Phases 0–35",
+    "description": "Continuous non-interactive implementation of the complete Agent Factory Roadmap v7 (Phases 0–35).",
+    "execution_policy": "/governance/policies/junie_execution_policy.yaml",
+    "auto_approval": true,
+    "created": "2025-10-28T00:00:00Z",
+    "author": "AgentFactoryExpert"
+  },
+
+  "directives": {
+    "skip_if_exists": true,
+    "on_conflict": "document_and_continue",
+    "log_to": [
+      "/logs/junie_execution.jsonl",
+      "/tasks/tasks_complete/"
+    ]
+  },
+
+  "phases": [
+    {
+      "phase": 0,
+      "title": "System Consolidation and Verification",
+      "source": "01_HOL_Core_Infrastructure_Tasks.md",
+      "action": "Verify project structure, governance kernel integrity, and baseline configuration.",
+      "if_exists": "verify_and_continue"
+    },
+    {
+      "phase": 1,
+      "title": "Core Infrastructure Deployment",
+      "source": "01_HOL_Core_Infrastructure_Tasks.md",
+      "action": "Deploy core services (HOL, Redis, Postgres) and schema migrations."
+    },
+    {
+      "phase": 2,
+      "title": "Governance Kernel and Middleware",
+      "source": "02_Governance_Kernel_and_Middleware_Tasks.md",
+      "action": "Implement compliance middleware and audit API."
+    },
+    {
+      "phase": 3,
+      "title": "Cloud Logging Integration",
+      "source": "03_Cloud_Logging_Integration_Tasks.md",
+      "action": "Enable OpenTelemetry + GCP logging integration."
+    },
+    {
+      "phase": 4,
+      "title": "Dashboard and Alerts Framework",
+      "source": "04_Dashboard_and_Alerts_Tasks.md",
+      "action": "Implement UI alert system and real-time status cards."
+    },
+    {
+      "phase": 5,
+      "title": "Governance Maturity Extensions",
+      "source": "05_Governance_Maturity_Extensions_Tasks.md",
+      "action": "Expand governance controls and ethical drift monitoring."
+    },
+    {
+      "phase": 6,
+      "title": "Federation Bus and Control Plane",
+      "source": "06_Federation_Bus_and_Control_Plane_Tasks.md",
+      "action": "Deploy bus API and context manifest for multi-agent coordination."
+    },
+    {
+      "phase": 7,
+      "title": "Documentation and Deployment",
+      "source": "07_Documentation_and_Deployment_Tasks.md",
+      "action": "Generate internal docs and deployment scripts."
+    },
+    {
+      "phase": 8,
+      "title": "Growth Autonomy Framework",
+      "action": "Implement ReflectiveSync and growth loop modules."
+    },
+    {
+      "phase": 9,
+      "title": "Governance Feedback Integration",
+      "action": "Connect Archy ↔ Genesis ↔ Expert feedback via control plane API."
+    },
+    {
+      "phase": 10,
+      "title": "Dashboard HITL Expansion",
+      "action": "Add Expert Console dock and proposal review workflow."
+    },
+    {
+      "phase": 11,
+      "title": "Continuous Evolution",
+      "action": "Enable learning compaction and periodic re-training."
+    },
+    {
+      "phase": 12,
+      "title": "Final Integration and Snapshot",
+      "action": "Run integration tests and export /governance/factory_build_snapshot_v7.json."
+    },
+    {
+      "phase": 13,
+      "title": "Multi-Tenant Federation Foundation",
+      "action": "Create /orgs/<tenant_id>/ structure and tenant manifest."
+    },
+    {
+      "phase": 14,
+      "title": "Authentication and Billing System",
+      "action": "Implement OAuth2, SSO, and Stripe billing integration."
+    },
+    {
+      "phase": 15,
+      "title": "Organization Dashboard Overlay",
+      "action": "Extend UI for multi-org analytics and RBAC."
+    },
+    {
+      "phase": 16,
+      "title": "Tenant-Scoped Expert Instances",
+      "action": "Deploy dedicated or shared Expert containers per tenant."
+    },
+    {
+      "phase": 17,
+      "title": "Shared Meta-Agents Layer",
+      "action": "Deploy Prometheus (R&D) and Compliance Kernel meta-agents."
+    },
+    {
+      "phase": 18,
+      "title": "Agent Export and Import System",
+      "action": "Create .afpkg packaging tool and import/export UI."
+    },
+    {
+      "phase": 19,
+      "title": "Marketplace and Portal",
+      "action": "Build /frontend/website and marketplace modules with search API."
+    },
+    {
+      "phase": 20,
+      "title": "Enterprise Controls and BYO-LLM Integration",
+      "action": "Implement tenant LLM policies and selector UI."
+    },
+    {
+      "phase": 21,
+      "title": "Global Federation Governance Kernel",
+      "action": "Deploy cross-tenant audit aggregator and compliance reports."
+    },
+    {
+      "phase": 22,
+      "title": "System Finalization and Release",
+      "action": "Validate build, generate release manifest, and notify admin."
+    },
+    {
+      "phase": 23,
+      "title": "Frontend Public Website Deployment",
+      "action": "Deploy Next.js marketing site with docs and pricing pages."
+    },
+    {
+      "phase": 24,
+      "title": "Admin Console and Analytics Portal",
+      "action": "Add usage, billing, and meta-agent monitoring dashboards."
+    },
+    {
+      "phase": 25,
+      "title": "Federation Marketplace Launch",
+      "action": "Publish initial .afpkg agents and crew catalog."
+    },
+    {
+      "phase": 26,
+      "title": "Enterprise Security and Audit Hardening",
+      "action": "Implement cross-org encryption and SOC-ready audit trails."
+    },
+    {
+      "phase": 27,
+      "title": "Partner Program and API SDK Development",
+      "action": "Build REST and Python/JS SDKs for external developers."
+    },
+    {
+      "phase": 28,
+      "title": "Federated Learning Pilot",
+      "action": "Enable safe meta-training across tenant insights."
+    },
+    {
+      "phase": 29,
+      "title": "Industry Template Factories",
+      "action": "Create pre-built agent packages for Finance, Healthcare, Education."
+    },
+    {
+      "phase": 30,
+      "title": "AI Marketplace Ecosystem Expansion",
+      "action": "Open community publishing and licensing capabilities."
+    },
+    {
+      "phase": 31,
+      "title": "Continuous Governance Review Cycle",
+      "action": "Schedule quarterly meta-audits and ethical drift summaries."
+    },
+    {
+      "phase": 32,
+      "title": "Public Release and Growth Autonomy V2",
+      "action": "Finalize public launch and enable autonomous improvement pipeline."
+    },
+    {
+      "phase": 33,
+      "title": "Post-Deployment Validation",
+      "action": "Verify all subsystems and archive /governance/factory_build_snapshot_v8.json."
+    },
+    {
+      "phase": 34,
+      "title": "Long-Term Evolution Scheduling",
+      "action": "Plan v8 R&D and future federation enhancements."
+    },
+    {
+      "phase": 35,
+      "title": "Final Audit and Certification",
+      "action": "Run ethical audit and certify Agent Factory Federation for public use."
+    }
+  ]
+}

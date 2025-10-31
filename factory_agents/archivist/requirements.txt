@@ -1,0 +1,9 @@
+crewai
+fastapi
+uvicorn
+openai
+sqlalchemy
+pydantic
+serpapi
+arxiv
+pyyaml

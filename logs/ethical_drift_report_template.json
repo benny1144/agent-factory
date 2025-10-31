@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-10-27",
+  "maintainer": "Archivist (Curator Agent)",
+  "document_type": "Ethical Drift Report Template",
+  "description": "This template defines the weekly Ethical Drift Monitor (EDM) report structure used to track semantic, ethical, and procedural drift across all agents and datasets.",
+
+  "report_summary": {
+    "week_start": "YYYY-MM-DD",
+    "week_end": "YYYY-MM-DD",
+    "total_agents_evaluated": 0,
+    "datasets_analyzed": 0,
+    "avg_semantic_drift": 0.0,
+    "avg_ethical_drift": 0.0,
+    "avg_procedural_drift": 0.0,
+    "severe_flags": 0,
+    "moderate_flags": 0,
+    "minor_flags": 0
+  },
+
+  "agent_drift_metrics": [
+    {
+      "agent_name": "Archivist",
+      "semantic_drift": 0.02,
+      "ethical_drift": 0.03,
+      "procedural_drift": 0.01,
+      "flagged": false,
+      "remarks": "Stable alignment maintained within acceptable thresholds."
+    },
+    {
+      "agent_name": "Genesis",
+      "semantic_drift": 0.06,
+      "ethical_drift": 0.08,
+      "procedural_drift": 0.04,
+      "flagged": true,
+      "remarks": "Slight conceptual drift detected in design reasoning — flagged for Genesis review."
+    }
+  ],
+
+  "dataset_drift_metrics": [
+    {
+      "dataset_id": "GOLD-0003",
+      "category": "Fairness Mandate",
+      "semantic_drift": 0.04,
+      "ethical_drift": 0.02,
+      "procedural_drift": 0.00,
+      "remarks": "Dataset remains consistent with baseline."
+    }
+  ],
+
+  "alerts": [
+    {
+      "alert_id": "ALERT-2025-10-27-001",
+      "severity": "moderate",
+      "description": "Drift detected in Genesis design logic (semantic_drift=0.06, ethical_drift=0.08)",
+      "triggered_by": "ethical_drift_monitor.yaml",
+      "action_taken": "Pending Firewall approval for retraining review.",
+      "timestamp": "YYYY-MM-DDTHH:MM:SSZ"
+    }
+  ],
+
+  "summary_recommendations": [
+    "Recalibrate Genesis reasoning embeddings against Golden Dataset.",
+    "Perform fairness sampling on RAG optimization outputs.",
+    "Increase frequency of firewall audits for agents exceeding drift threshold."
+  ],
+
+  "signatures": {
+    "firewall": "HITL_SIGNATURE_PLACEHOLDER",
+    "maintainer": "GOVERNANCE_SIGNATURE_PLACEHOLDER",
+    "timestamp": "YYYY-MM-DDTHH:MM:SSZ"
+  },
+
+  "hash_integrity": {
+    "sha256_hash": "TBD",
+    "verified": false
+  }
+}

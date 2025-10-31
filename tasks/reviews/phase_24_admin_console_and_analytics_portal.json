@@ -1,0 +1,11 @@
+{
+  "phase": 24,
+  "title": "Admin Console and Analytics Portal",
+  "action": "Add usage, billing, and meta-agent monitoring dashboards.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Add usage, billing, and meta-agent monitoring dashboards."
+  }
+}

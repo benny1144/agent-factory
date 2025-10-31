@@ -1,0 +1,2 @@
+{"ok": true, "data": {"event": "kernel_initialized"}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.811912+00:00", "source": "logs\\audit.jsonl"}}
+{"ok": true, "data": {"event": "audit_log", "message": "kernel_initialized"}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.828243+00:00", "source": "logs\\audit.jsonl"}}

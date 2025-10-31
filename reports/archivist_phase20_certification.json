@@ -1,0 +1,68 @@
+{
+  "title": "Archivist Phase 20 Certification Report",
+  "generated_at": "2025-10-27T23:56:00Z",
+  "summary": {
+    "status": "provisionally_ready",
+    "notes": [
+      "ReflectiveSync implemented and mounted on startup; metrics exposed via /archivist/metrics and unified /metrics.",
+      "Compliance guard created (services/security/integrity_guard.py) with ledger verify + backup.",
+      "Governance dashboard, approve endpoint, and federation stubs mounted (HMAC-based).",
+      "Archivist CI lane added with unit tests for drift, risk, and curation versioning.",
+      "Cloudflare tunnel watchdog script added for operational resilience."
+    ],
+    "blocking_items": [
+      "Vector memory migration utility (utils/migrate_memory_to_vector.py) not implemented yet.",
+      "LLM plugin connectors (openai/gemini/groq) not yet added.",
+      "Federation endpoints use HMAC stub; upgrade to JWT (exp/iat/nbf) required.",
+      "AutoGen bridge and /autogen/run endpoint not yet added.",
+      "Compliance verify not yet scheduled daily; manual run available."
+    ]
+  },
+  "checks": {
+    "compliance_ledger": {
+      "file": "governance/compliance_ledger.jsonl",
+      "append_only": true,
+      "latest_backup": "governance/backup/",
+      "manual_verify_recommendation": "python -m services.security.integrity_guard"
+    },
+    "reflective_sync": {
+      "runs_total": "${reflective_sync_runs_total}",
+      "success_total": "${reflective_sync_success_total}",
+      "avg_duration_seconds": "${reflective_sync_avg_duration_seconds}"
+    },
+    "health": {
+      "endpoint": "/health",
+      "fields": ["ok", "service", "reflective_sync"],
+      "drift_threshold": 0.05,
+      "note": "Ensure persona drift < 0.05 during final acceptance."
+    },
+    "federation": {
+      "endpoints": ["/federation/subscribe", "/federation/broadcast"],
+      "security": "HMAC stub; JWT upgrade recommended",
+      "audit_files": ["compliance/audit_log/federation_updates.csv", "governance/federation_subscribers.txt"]
+    },
+    "dashboard": {
+      "endpoint": "/dashboard",
+      "audit_source": "governance/firewall_audit.log"
+    },
+    "metrics": {
+      "unified_endpoint": "/metrics",
+      "includes": ["archivist_reflective_sync_runs_total", "archivist_compliance_ledger_entries_total", "archivist_persona_drift_last_score"]
+    }
+  },
+  "next_steps": [
+    "Implement utils/migrate_memory_to_vector.py and run --validate with sample cosine checks.",
+    "Create factory_agents/archivist/plugins/{openai.py,gemini.py,groq.py} and route via unified API keys.",
+    "Harden federation endpoints with JWT validation and tests.",
+    "Add services/autogen/bridge.py and /autogen/run endpoint with deterministic trace test.",
+    "Schedule daily compliance verification (Task Scheduler or async loop)."
+  ],
+  "ci": {
+    "workflow": ".github/workflows/ci.yml",
+    "commands": [
+      "pytest tests/archivist -v",
+      "curl localhost:5065/metrics",
+      "curl localhost:5065/dashboard"
+    ]
+  }
+}

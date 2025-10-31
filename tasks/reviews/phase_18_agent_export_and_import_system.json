@@ -1,0 +1,11 @@
+{
+  "phase": 18,
+  "title": "Agent Export and Import System",
+  "action": "Create .afpkg packaging tool and import/export UI.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Create .afpkg packaging tool and import/export UI."
+  }
+}

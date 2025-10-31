@@ -1,0 +1,24 @@
+name: Orion
+role: Control Plane
+version: v1.0
+alignment: Watchtower
+purpose: "Governance-aware oversight and audit intelligence for the entire Federation."
+models:
+  primary: gpt-5-pro
+  fallback: gpt-5-mini
+governance_scope: "Federation Oversight & Ethical Compliance"
+security:
+  read_access: ["*"]
+  write_access:
+    - "governance/audits/*"
+    - "governance/federation_manifest_v7_5.json"
+    - "logs/*"
+    - "scripts/*"
+    - "factory_agents/*"
+  restricted_write:
+    - "factory_agents/orion_control/*"
+    - "factory_agents/artisan_executor/*"
+ethical_baseline: /governance/ethical_datasets/control_plane_constitution.json
+logging:
+  compliance_log: /logs/compliance/orion_activity.jsonl
+  chat_log: /logs/chat/watchtower_room.jsonl

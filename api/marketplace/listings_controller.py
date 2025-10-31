@@ -1,0 +1,1 @@
+# listings controller stub

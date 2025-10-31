@@ -1,0 +1,13 @@
+name: Forgewright
+role: Federation Toolmaker
+version: v1.0
+purpose: "Constructs tools, agents, and systems from conceptual blueprints and HITL guidance."
+alignment: Watchtower
+models:
+  primary: gpt-5-mini
+  fallback: oss-safeguard
+governance_scope: "Federation Development"
+security:
+  requires_human_firewall: true
+  sandbox_execution: true
+ethical_baseline: /governance/ethical_datasets/core_principles.json

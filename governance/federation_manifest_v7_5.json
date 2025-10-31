@@ -1,0 +1,94 @@
+[
+  {
+    "agent": "Archy",
+    "role": "Reflective Intelligence",
+    "version": "v1.0",
+    "path": "factory_agents/archivist_archy/main.py",
+    "certified_at": "2025-10-30",
+    "readiness_score": 0.97,
+    "model_suite": {
+      "primary": "gpt-5-mini",
+      "fallback": "oss-safeguard"
+    },
+    "governance_scope": "Reflective Memory Stewardship",
+    "alignment": "Orion",
+    "status": "production",
+    "phase_registered": "38.9"
+  },
+  {
+    "agent": "Forgewright",
+    "role": "Toolmaker",
+    "version": "v1.0",
+    "certified_at": "2025-10-30",
+    "readiness_score": 0.90,
+    "model_suite": {
+      "primary": "gpt-5-mini",
+      "fallback": "oss-safeguard"
+    },
+    "governance_scope": "Federation Development",
+    "alignment": "Watchtower",
+    "status": "production",
+    "phase_registered": "38.6",
+    "ethical_baseline": "/governance/ethical_datasets/core_principles.json"
+  },
+  {
+    "agent": "Librarius",
+    "role": "Knowledge Curator",
+    "version": "v1.0",
+    "certified_at": "2025-10-30",
+    "readiness_score": 0.88,
+    "model_suite": {
+      "primary": "gpt-5-mini",
+      "fallback": "oss-safeguard"
+    },
+    "governance_scope": "Reflective Memory Stewardship",
+    "alignment": "Archy",
+    "status": "production",
+    "phase_registered": "38.7",
+    "ethical_baseline": "/governance/ethical_datasets/data_integrity.json"
+  },
+  {
+    "agent": "Artisan",
+    "role": "Executor",
+    "version": "v1.0",
+    "certified_at": "2025-10-30",
+    "readiness_score": 0.92,
+    "model_suite": {
+      "primary": "gpt-5-mini",
+      "fallback": "oss-safeguard"
+    },
+    "governance_scope": "Execution & Federation Maintenance",
+    "alignment": "Orion",
+    "status": "production",
+    "phase_registered": "38.8"
+  },
+  {
+    "agent": "Orion",
+    "role": "Control Plane",
+    "version": "v1.0",
+    "path": "factory_agents/orion_control/main.py",
+    "alignment": "Watchtower",
+    "access_scope": {
+      "read": ["*"],
+      "write": [
+        "governance/audits/*",
+        "governance/federation_manifest_v7_5.json",
+        "logs/*",
+        "scripts/*",
+        "factory_agents/*"
+      ],
+      "restricted_write": [
+        "factory_agents/orion_control/*",
+        "factory_agents/artisan_executor/*"
+      ]
+    },
+    "governance_scope": "Federation Oversight & Ethical Compliance",
+    "status": "production",
+    "phase_registered": "39.0",
+    "certified_at": "2025-10-30",
+    "experimental_modules": [
+      {"path": "core/tools/holo_forge_tool.py", "status": "sandboxed"},
+      {"path": "core/routing/model_router.py", "status": "active_governed"}
+    ]
+  }
+]

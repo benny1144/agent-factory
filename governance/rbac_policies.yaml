@@ -1,0 +1,9 @@
+# Role-Based Access Policies
+version: 1
+roles:
+  admin:
+    permissions: ["manage_tenant", "view_metrics", "manage_billing", "manage_agents"]
+  user:
+    permissions: ["use_agents", "view_own_usage"]
+  auditor:
+    permissions: ["view_metrics", "view_audit"]

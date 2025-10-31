@@ -1,0 +1,55 @@
+{
+  "title": "Archivist Phase 21 — Finalization and Release Certification",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or release/archivist-complete",
+    "prior_tasks": [
+      "Archivist_Phase21_Final_Compliance_and_Federation_Integration_Task.json",
+      "Archy-phase21completion"
+    ],
+    "governance_firewall": "manual_approved: true",
+    "dependencies": ["pyjwt", "faiss", "qdrant-client", "sentence-transformers"]
+  },
+  "plan": {
+    "steps": [
+      "1. Implement JWT federation security in /factory_agents/archivist/extra_endpoints.py with full exp/iat/nbf validation and logging.",
+      "2. Create AutoGen Bridge module in /services/autogen/bridge.py for orchestration, logging, and task execution.",
+      "3. Add /autogen/run endpoint to extra_endpoints.py using AutoGenBridge integration.",
+      "4. Add provider selection helper to reasoning_core.py for plugin-based LLM routing.",
+      "5. Schedule daily compliance verification task in fastapi_server.py and add compliance metrics to /metrics.",
+      "6. Create and run new unit tests for plugins, federation, and AutoGen Bridge modules.",
+      "7. Generate final certification report /reports/archivist_phase21_release_certification.json with governance and CI verification results."
+    ]
+  },
+  "edits": [
+    {"path": "factory_agents/archivist/extra_endpoints.py", "change": "Replace HMAC with JWT federation and add /autogen/run endpoint."},
+    {"path": "services/autogen/bridge.py", "change": "Implement AutoGenBridge class with trace logging."},
+    {"path": "factory_agents/archivist/reasoning_core.py", "change": "Add llm_generate() for plugin routing."},
+    {"path": "factory_agents/archivist/fastapi_server.py", "change": "Add compliance scheduler startup event."},
+    {"path": "reports/archivist_phase21_release_certification.json", "change": "Add final certification summary with governance approval."}
+  ],
+  "tests": [
+    "pytest tests/archivist -v",
+    "python utils/migrate_memory_to_vector.py --validate",
+    "python -m services.autogen.bridge --test",
+    "curl -X POST localhost:5065/federation/broadcast -H 'Authorization: Bearer <jwt>' -d '{\\\"event\\\":\\\"test\\\"}'",
+    "curl localhost:5065/autogen/run -d '{\\\"task\\\":\\\"sample\\\"}'",
+    "curl localhost:5065/metrics"
+  ],
+  "verification": {
+    "success": [
+      "/logs/federation_activity.jsonl contains valid JWT entries.",
+      "/logs/autogen_bridge.jsonl records orchestration traces.",
+      "/reports/archivist_phase21_release_certification.json created and valid.",
+      "/metrics shows compliance and drift counters.",
+      "CI pipeline passes all tests successfully."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "git checkout HEAD~1 -- factory_agents/archivist/extra_endpoints.py",
+      "rm services/autogen/bridge.py reports/archivist_phase21_release_certification.json"
+    ]
+  },
+  "result": "Archivist achieves Phase 21 Full Certification — fully operational, compliant, and autonomous. Ready for Genesis orchestration and dashboard deployment."
+}

@@ -1,0 +1,46 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Markdown Formatting for Archy Replies (Archivist Phase 2)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/fastapi_server.py",
+        "factory_agents/archivist/reasoning_core.py"
+      ]
+    },
+    "Plan": [
+      "1) Create a new helper function format_response() inside fastapi_server.py to handle structured Markdown formatting for all replies.",
+      "2) Modify /chat endpoint to wrap all returned outputs (reasoning, read, list, write) with format_response().",
+      "3) Ensure consistent icons, headers, and code block formatting for all responses (🜂, ⚠️, ❗, ✅).",
+      "4) Test responses in browser and PowerShell to confirm proper Markdown formatting and spacing.",
+      "5) Log sample formatted messages in /logs/ui_format_test.log for verification."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nimport json\n\ndef format_response(data):\n    \"\"\"Pretty-format all Archy responses for readability in Markdown style.\"\"\"\n    if isinstance(data, dict):\n        if data.get('status') == 'success' and 'items' in data:\n            items = '\n'.join([f"- {'📁' if i['type']=='dir' else '📄'} {i['name']}" for i in data['items']])\n            return f"🜂 **Archy Report**\n## Directory Listing\n{items}"\n        elif data.get('status') == 'success' and 'content' in data:\n            path = data.get('path', '')\n            return f"🜂 **Archy Report**\n## File Read\n**Path:** `{path}`\n\n```python\n{data['content']}\n```"\n        elif data.get('status') == 'requires_confirmation':\n            return f"🜂 **Archy Notice**\n⚠️ {data.get('message','Confirmation required.')}\n\nUse: `confirm overwrite <path>`"\n        elif data.get('status') == 'error':\n            return f"🜂 **Archy Error**\n❗ {data.get('error','Unknown error')}\n**Path:** {data.get('path','')}"\n        elif data.get('status') == 'success' and 'reply' in data:\n            return f"🜂 **Archy Response**\n{data['reply']}"\n        else:\n            return f"🜂 **Archy Output**\n{json.dumps(data, indent=2)}"\n    if isinstance(data, str):\n        lines = data.replace('\\n', '\n').strip()\n        return f"🜂 **Archy Response**\n{lines}"\n    return f"🜂 **Archy Output**\n{data}"\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START (Modify /chat endpoint) ===\n@app.post('/chat')\nasync def chat(request: Request):\n    body = await request.json()\n    message = body.get('message', '').strip()\n    \n    if message.lower().startswith('list '):\n        result = file_access.list_dir(message.split('list ',1)[1].strip())\n        return {'reply': format_response(result)}\n\n    if message.lower().startswith('read '):\n        result = file_access.safe_read(message.split('read ',1)[1].strip())\n        return {'reply': format_response(result)}\n\n    if message.lower().startswith('write '):\n        if ':' in message:\n            path, content = message.split(':',1)\n            result = file_access.safe_write(path.replace('write ','').strip(), content.strip())\n            return {'reply': format_response(result)}\n        return {'reply': format_response({'status':'error','error':'Use format: write path: content'})}\n\n    if message.lower().startswith('confirm overwrite '):\n        path = message.replace('confirm overwrite ','').strip()\n        result = file_access.safe_write(path,'',confirm=True)\n        return {'reply': format_response(result)}\n\n    reply = reasoning_core.think(message)\n    return {'reply': format_response(reply)}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server (uvicorn factory_agents.archivist.fastapi_server:app --reload --port 5065).",
+      "2) Send POST request: {\"message\":\"list factory_agents\"} → Response must contain Markdown list.",
+      "3) Send POST request: {\"message\":\"read factory_agents/archivist/file_access.py\"} → Response formatted in code block.",
+      "4) Observe line spacing, bold headers, and emojis rendering correctly in browser and PowerShell clients.",
+      "5) Verify /logs/ui_format_test.log is created with sample formatted messages."
+    ],
+    "Verification": [
+      "Responses show structured formatting in browser (headers, bullets, code).",
+      "Markdown renders cleanly and spacing is preserved in PowerShell client.",
+      "All response types (read, list, write, error) are visually distinct.",
+      "Audit confirms UI log entries saved correctly."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

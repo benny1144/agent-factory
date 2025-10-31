@@ -1,0 +1,11 @@
+{
+  "phase": 28,
+  "title": "Federated Learning Pilot",
+  "action": "Enable safe meta-training across tenant insights.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Enable safe meta-training across tenant insights."
+  }
+}

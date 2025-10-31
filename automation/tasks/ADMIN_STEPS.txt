@@ -1,0 +1,79 @@
+✅ Junie_DUNI_Tunnel_Autoheal_Setup complete. Please run the following steps manually as Administrator:
+
+0) Start the Agent Factory backend API locally (new port 8000):
+   cd C:\Users\benny\IdeaProjects\agent-factory
+   $env:PYTHONPATH=".\src"; python -m uvicorn agent_factory.server.fastapi_server:app --host 127.0.0.1 --port 8000 --reload
+
+1) Recreate and start Cloudflared service:
+   sc.exe delete Cloudflared
+   sc.exe create Cloudflared binPath= "\"C:\Program Files (x86)\cloudflared\cloudflared.exe\" tunnel run gpt" start=auto
+   Set-Service -Name Cloudflared -StartupType AutomaticDelayedStart
+   net start Cloudflared
+
+2) Import tasks:
+   schtasks /create /tn "JunieBridge_Expert" /xml "C:\Users\benny\IdeaProjects\agent-factory\automation\tasks\JunieBridge_Expert.xml"
+   schtasks /create /tn "Junie_Watchdog" /xml "C:\Users\benny\IdeaProjects\agent-factory\automation\tasks\Junie_Watchdog.xml"
+
+3) Verify health (local and public):
+   curl http://127.0.0.1:8000/health
+   curl -v https://gpt.disagreements.ai/health
+
+
+
+=== Stabilize and Automate AgentFactoryAPI + Cloudflared ===
+
+A) Configure NSSM for AgentFactoryAPI (Admin PowerShell):
+   powershell -ExecutionPolicy Bypass -File scripts\nssm_config_agentfactoryapi.ps1
+
+B) Restart the AgentFactoryAPI service cleanly (Admin PowerShell):
+   powershell -ExecutionPolicy Bypass -File scripts\nssm_restart_agentfactoryapi.ps1
+
+C) Register the monitor Scheduled Task (runs every 5 minutes as SYSTEM):
+   powershell -ExecutionPolicy Bypass -File automation\tasks\register_agentfactory_monitor.ps1
+
+D) Verify logs (entries appear if a service is restarted or missing):
+   type C:\Users\benny\IdeaProjects\agent-factory\logs\service_monitor.log
+
+E) Manual one-off commands (equivalent), if preferred:
+   $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File 'C:\Users\benny\IdeaProjects\agent-factory\monitor_services.ps1'"
+   $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration ([TimeSpan]::MaxValue)
+   Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "AgentFactoryMonitor" -Description "Monitors and restarts API and Cloudflared if down" -User "SYSTEM" -RunLevel Highest -Force
+
+
+F) Register the Cloudflared watchdog Scheduled Task (runs every 5 minutes as SYSTEM):
+   powershell -ExecutionPolicy Bypass -File automation\tasks\register_cloudflared_watchdog.ps1
+
+G) Cloudflared Watchdog log (auto-recovery events):
+   type C:\Users\benny\IdeaProjects\agent-factory\logs\cloudflared_watchdog.log
+
+H) Manual one-off commands (equivalent) for Cloudflared watchdog:
+   $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File 'C:\Users\benny\IdeaProjects\agent-factory\monitor_cloudflared.ps1'"
+   $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration ([TimeSpan]::MaxValue)
+   Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CloudflaredWatchdog" -Description "Monitors and restarts Cloudflared if reconnect errors appear" -User "SYSTEM" -RunLevel Highest -Force
+
+
+
+=== GPT IDE Bridge — Reinitialize and Validate ===
+
+1) Reset and check plugin CLI (from IDE PowerShell):
+   gpt-ide --reset
+   gpt-ide --status
+
+2) Verify local config (~/.config/gpt-ide/config.json):
+   Expect fields:
+     endpoint: https://gpt-ide.disagreements.ai
+     auth_token: <non-empty>
+     project_root: C:\Users\benny\IdeaProjects\agent-factory
+
+3) Validate remote API health:
+   curl https://gpt-ide.disagreements.ai/api/health
+   # Expect: {"ok": true, "ide": { ... }}
+
+4) Run repo validator (writes logs/gpt_ide_bridge_validation.jsonl):
+   powershell -ExecutionPolicy Bypass -File scripts\gpt_ide_bridge_validate.ps1
+   # Optional (skip reset):
+   powershell -ExecutionPolicy Bypass -File scripts\gpt_ide_bridge_validate.ps1 -NoReset
+
+5) Rollback if issues, then repeat:
+   gpt-ide --uninstall
+   gpt-ide --install

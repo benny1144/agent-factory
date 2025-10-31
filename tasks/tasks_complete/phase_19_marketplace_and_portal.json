@@ -1,0 +1,11 @@
+{
+  "phase": 19,
+  "title": "Marketplace and Portal",
+  "action": "Build /frontend/website and marketplace modules with search API.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Build /frontend/website and marketplace modules with search API."
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Persistent Long-Term Conversational Memory (Archivist Phase 7)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "factory_agents/archivist/fastapi_server.py"
+      ],
+      "directories_to_create": ["memory_store/long_term"]
+    },
+    "Plan": [
+      "1) Create /memory_store/long_term/ directory to persist conversation memory logs.",
+      "2) Add save_conversation() and load_recent_conversations() methods in reasoning_core.py.",
+      "3) Automatically save each chat exchange (input, reply, timestamp) to memory_store/long_term/session_<date>.jsonl.",
+      "4) On startup, load last N (default 5) conversations for context priming.",
+      "5) Extend think() to include recent memory snippets in reasoning input when generating responses.",
+      "6) Verify persistence by restarting the server and confirming session continuity."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/reasoning_core.py",
+        "Change": """# === PATCH START ===\nimport datetime\n\nMEMORY_DIR = os.path.join('memory_store', 'long_term')\nos.makedirs(MEMORY_DIR, exist_ok=True)\n\ndef save_conversation(user_msg: str, archy_reply: str):\n    \"\"\"Save each interaction to long-term memory as JSONL.\"\"\"\n    entry = {\n        'timestamp': datetime.datetime.utcnow().isoformat(),\n        'user': user_msg,\n        'archy': archy_reply\n    }\n    file_path = os.path.join(MEMORY_DIR, f'session_{datetime.date.today()}.jsonl')\n    with open(file_path, 'a', encoding='utf-8') as f:\n        f.write(json.dumps(entry) + '\\n')\n\ndef load_recent_conversations(limit: int = 5):\n    \"\"\"Load the last N conversation entries across sessions.\"\"\"\n    import glob\n    files = sorted(glob.glob(os.path.join(MEMORY_DIR, 'session_*.jsonl')), reverse=True)\n    history = []\n    for fpath in files:\n        with open(fpath, 'r', encoding='utf-8') as f:\n            lines = f.readlines()[-limit:]\n            history.extend([json.loads(line) for line in lines])\n        if len(history) >= limit:\n            break\n    return history[-limit:]\n\n# Extend think() to include recent memory context\nold_think = think\ndef think(message: str):\n    recent_memory = load_recent_conversations(5)\n    memory_context = '\\n'.join([f"User: {m['user']}\\nArchy: {m['archy']}" for m in recent_memory])\n    augmented_message = f"[Recent Memory Context:]\\n{memory_context}\\n\\n[New Message:] {message}"\n    response = old_think(augmented_message)\n    save_conversation(message, response)\n    return response\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server.",
+      "2) Send several chat messages (3–5).",
+      "3) Stop and restart the server, then send new message like 'What did we discuss last time?'.",
+      "4) Confirm Archy recalls prior conversation context.",
+      "5) Check /memory_store/long_term/session_<date>.jsonl for stored logs.",
+      "6) Verify no duplicate entries or file write errors."
+    ],
+    "Verification": [
+      "Session continuity persists after restart.",
+      "Memory files correctly log all interactions with timestamps.",
+      "Reasoning context includes past responses.",
+      "Audit confirms new directory /memory_store/long_term/ created and populated."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/reasoning_core.py",
+      "rm -r memory_store/long_term/"
+    ]
+  }
+}

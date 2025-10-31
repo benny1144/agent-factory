@@ -1,0 +1,54 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Self-Indexing and Auto-Documentation (Archivist Phase 8)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "factory_agents/archivist/fastapi_server.py"
+      ],
+      "directories_to_create": ["registry"]
+    },
+    "Plan": [
+      "1) Create a registry/agent_catalog.yaml file that holds summaries of all agents, personas, and tools in the project.",
+      "2) Add build_agent_catalog() and summarize_file() functions in reasoning_core.py.",
+      "3) Each summary entry should include: path, description (from docstring or top comment), and last modified timestamp.",
+      "4) Add 'update registry' command trigger in fastapi_server.py that calls reasoning_core.build_agent_catalog().",
+      "5) Ensure output is YAML-formatted and readable, with versioned backups saved under registry/backups/.",
+      "6) Log every catalog rebuild event to /logs/registry_audit.log.",
+      "7) Validate summaries appear correctly for all .py and .yaml files within factory_agents/."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/reasoning_core.py",
+        "Change": """# === PATCH START ===\nimport yaml, time, glob\n\ndef summarize_file(path):\n    \"\"\"Extract docstring or first comment line as file summary.\"\"\"\n    try:\n        with open(path, 'r', encoding='utf-8') as f:\n            lines = f.readlines()\n        comment = next((l.strip('# ').strip() for l in lines if l.strip().startswith('#')), 'No summary available.')\n        info = {\n            'path': path,\n            'summary': comment,\n            'last_modified': time.ctime(os.path.getmtime(path))\n        }\n        return info\n    except Exception as e:\n        return {'path': path, 'summary': f'Error reading file: {e}'}\n\ndef build_agent_catalog():\n    \"\"\"Scan factory_agents/ and create registry/agent_catalog.yaml summarizing all agents.\"\"\"\n    catalog = []\n    for file in glob.glob('factory_agents/**/*.py', recursive=True):\n        catalog.append(summarize_file(file))\n    for file in glob.glob('factory_agents/**/*.yaml', recursive=True):\n        catalog.append(summarize_file(file))\n    os.makedirs('registry/backups', exist_ok=True)\n    backup_name = f"registry/backups/catalog_{int(time.time())}.yaml"\n    with open(backup_name, 'w', encoding='utf-8') as backup:\n        yaml.dump(catalog, backup, allow_unicode=True)
+    with open('registry/agent_catalog.yaml', 'w', encoding='utf-8') as f:\n        yaml.dump(catalog, f, allow_unicode=True)
+    with open(os.path.join('logs', 'registry_audit.log'), 'a') as log:\n        log.write(f"[CATALOG REBUILD] {time.ctime()} - {len(catalog)} entries\n")\n    return f"✅ Agent catalog updated with {len(catalog)} entries."\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nif message.lower().strip() == 'update registry':\n    result = reasoning_core.build_agent_catalog()\n    return {'reply': format_response({'reply': result})}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server.",
+      "2) Send message: 'update registry'.",
+      "3) Confirm Markdown output: '✅ Agent catalog updated with <N> entries.'.",
+      "4) Open registry/agent_catalog.yaml and verify summary structure (path, summary, last_modified).",
+      "5) Check registry/backups/ contains timestamped catalog backup.",
+      "6) Verify /logs/registry_audit.log includes rebuild entry."
+    ],
+    "Verification": [
+      "Registry YAML created successfully with correct entry count.",
+      "Backups generated automatically with proper timestamps.",
+      "Audit logs reflect rebuild event.",
+      "Summaries accurately match each agent’s primary purpose."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/reasoning_core.py",
+      "git restore factory_agents/archivist/fastapi_server.py",
+      "rm -r registry/agent_catalog.yaml registry/backups/"
+    ]
+  }
+}

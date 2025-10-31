@@ -1,0 +1,55 @@
+{
+  "title": "Archivist Phase 20 Certification and Final System Validation",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or release/archivist-final",
+    "dependent_modules": "Completed via Archivist_Phase16-20_Finalization_Task.json",
+    "governance_status": "manual_approved: true",
+    "genesis_reference": "/factory_agents/architect_genesis/Genesis_Expansion_MasterPlan.json",
+    "ci_workflow": ".github/workflows/ci.yml"
+  },
+  "plan": {
+    "steps": [
+      "1. Run compliance ledger verification using services/security/integrity_guard.py and snapshot validated entries.",
+      "2. Validate ReflectiveSync operation and ensure metrics are merged into unified /metrics endpoint.",
+      "3. Execute utils/migrate_memory_to_vector.py --validate and confirm embedding quality and log creation.",
+      "4. Perform federation JWT broadcast tests for accepted and rejected cases and log results.",
+      "5. Verify LLM plugins (openai.py, gemini.py, groq.py) respond correctly through reasoning_core.py.",
+      "6. Execute AutoGen Bridge module tests and confirm logs are appended in /logs/autogen_bridge.jsonl.",
+      "7. Confirm Governance dashboard displays all compliance and federation information accurately.",
+      "8. Check /health endpoint for system readiness and verify drift < 0.05.",
+      "9. Trigger CI pipeline and verify successful pytest and coverage.",
+      "10. Generate /reports/archivist_phase20_certification.json summarizing verification results and mark system certified."
+    ]
+  },
+  "edits": [
+    {"path": "/reports/archivist_phase20_certification.json", "change": "Add certification report summarizing final validation."},
+    {"path": "/governance/compliance_ledger.jsonl", "change": "Append final verified checksum entries."},
+    {"path": "/factory_agents/archivist/extra_endpoints.py", "change": "Add unified /metrics endpoint aggregator."}
+  ],
+  "tests": [
+    "pytest tests/archivist -v",
+    "python services/security/integrity_guard.py --verify",
+    "python utils/migrate_memory_to_vector.py --validate",
+    "curl -X POST localhost:5065/federation/broadcast -H 'Authorization: Bearer <jwt>' -d '{\\\"event\\\":\\\"test\\\"}'",
+    "python -m services.autogen.bridge --test",
+    "curl localhost:5065/metrics"
+  ],
+  "verification": {
+    "success": [
+      "/governance/compliance_ledger.jsonl valid and append-only.",
+      "/logs/vector_migration.jsonl created and populated.",
+      "/logs/federation_activity.jsonl contains accepted/rejected JWT events.",
+      "/logs/autogen_bridge.jsonl records task traces.",
+      "/metrics endpoint returns combined ReflectiveSync, Compliance, and Drift counters.",
+      "pytest and CI workflows complete successfully."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "git checkout HEAD~1 -- reports/",
+      "rm reports/archivist_phase20_certification.json"
+    ]
+  },
+  "result": "Archivist achieves full Phase 20 Certification — confirming compliance integrity, reflective stability, secure federation, plugin interoperability, and readiness for Genesis orchestration and dashboard integration."
+}

@@ -1,0 +1,11 @@
+{
+  "phase": 27,
+  "title": "Partner Program and API SDK Development",
+  "action": "Build REST and Python/JS SDKs for external developers.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Build REST and Python/JS SDKs for external developers."
+  }
+}

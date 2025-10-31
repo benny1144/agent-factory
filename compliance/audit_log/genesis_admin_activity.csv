@@ -1,0 +1,12 @@
+ts,action,outcome,details
+2025-10-26T22:37:17.348942+00:00,status,ok,"{""state"": ""idle"", ""active"": false, ""mode"": null, ""updated"": ""2025-10-26T22:37:17.348659+00:00""}"
+2025-10-26T22:38:30.141980+00:00,reactivate,ok,"{""ok"": true, ""state"": ""active"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-26T22:38:30.138223+00:00""}"
+2025-10-26T22:54:41.538083+00:00,status,ok,"{""state"": ""architect_mode"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-26T22:38:30.138223+00:00""}"
+2025-10-26T23:23:04.395073+00:00,reactivate,ok,"{""ok"": true, ""state"": ""active"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-26T23:23:04.390921+00:00"", ""listening"": true, ""listen_port"": 5055, ""requested_listen_port"": 5055}"
+2025-10-27T00:21:54.328646+00:00,status,ok,"{""state"": ""architect_mode"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-26T23:23:04.390921+00:00"", ""listening"": true, ""listen_port"": 5055}"
+2025-10-27T00:26:36.679644+00:00,status,ok,"{""state"": ""architect_mode"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-26T23:23:04.390921+00:00"", ""listening"": true, ""listen_port"": 5055}"
+2025-10-27T00:27:03.179103+00:00,reactivate,ok,"{""ok"": true, ""state"": ""active"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-27T00:27:03.175377+00:00"", ""listening"": true, ""listen_port"": 5055, ""requested_listen_port"": 5055}"
+2025-10-27T00:36:47.805391+00:00,reactivate,ok,"{""ok"": true, ""state"": ""active"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-27T00:36:47.800046+00:00"", ""listening"": true, ""listen_port"": 5055, ""requested_listen_port"": 5055}"
+2025-10-27T00:43:32.183929+00:00,reactivate,ok,"{""ok"": true, ""state"": ""active"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-27T00:43:32.183068+00:00"", ""listening"": false, ""listen_port"": null, ""listen_ok"": false, ""listen_error"": ""timed out"", ""requested_listen_port"": 5055}"
+2025-10-27T03:56:25.627687+00:00,status,ok,"{""state"": ""architect_mode"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-27T02:15:19.089090Z"", ""listening"": false, ""listen_port"": null}"
+2025-10-27T04:03:31.320499+00:00,status,ok,"{""state"": ""architect_mode"", ""active"": true, ""mode"": ""architect_mode"", ""updated"": ""2025-10-27T02:15:19.089090Z"", ""listening"": false, ""listen_port"": null}"

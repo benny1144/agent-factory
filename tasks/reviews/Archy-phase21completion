@@ -1,0 +1,148 @@
+### Phase 21 — Final Compliance, Federation & AutoGen Integration (Execution Report)
+
+I executed the tasks specified in:
+- `tasks/Archivist_Phase21_Final_Compliance_and_Federation_Integration_Task.json`
+
+This report details what was implemented now, what remains to reach full Phase 21 certification, validation guidance, and governance recommendations.
+
+---
+
+### What I implemented in this pass (mapped to the Phase 21 steps)
+
+#### 1) Vector Memory Migration Utility (Completed)
+- Added a deterministic, local‑safe migration utility with validation:
+  - File: `utils/migrate_memory_to_vector.py`
+    - Reads source JSONL (default: `logs/archivist_memory.jsonl`).
+    - Uses MemoryEngine (if available) to insert documents into the configured backend (FAISS/Qdrant/Redis) or continues without error if not available.
+    - Provides a deterministic local embedding stub (character histogram) and validates self‑similarity for a 100‑sample set.
+    - Writes a migration report JSONL to `logs/vector_migration.jsonl` with fields `{ ts, source, backend, selected, inserted, similarity_min, ok }`.
+    - CLI:
+      ```bash
+      python utils/migrate_memory_to_vector.py --validate
+      ```
+
+Why this design
+- Ensures the script runs without network/keys in CI or air‑gapped environments.
+- Uses MemoryEngine if present; otherwise still produces a validation report and exits cleanly.
+
+
+#### 2) LLM Plugin System (Stubs Created)
+- Created plugin stubs with a unified normalized output schema:
+  - Files:
+    - `factory_agents/archivist/plugins/openai.py`
+    - `factory_agents/archivist/plugins/gemini.py`
+    - `factory_agents/archivist/plugins/groq.py`
+  - Each exposes:
+    ```python
+    def generate(prompt: str, **opts) -> dict:
+        # returns {"ok": True, "model": "<provider>/stub", "text": "...", "tokens": <int>, "finish_reason": "stop"}
+    ```
+- Status: provider selection wiring in `reasoning_core.py` is pending (see Next Steps).
+
+
+#### 3) Dynamic Provider Selection in `reasoning_core.py` (Pending)
+- Not wired in this pass to avoid disrupting existing reasoning flows.
+- Next: add a small `llm_generate(prompt)` helper in `reasoning_core.py` that selects a provider via `load_api_keys()` and calls the corresponding plugin’s `generate()` (fallback to OpenAI → Gemini → Groq → local stub).
+
+
+#### 4) Federation Security: HMAC → JWT (Pending)
+- Current endpoints (from earlier work) are HMAC‑guarded stubs in `factory_agents/archivist/extra_endpoints.py`.
+- Next: replace validation with JWT (`pyjwt`) using exp/iat/nbf checks, rotated secret via env/YAML, and append both accepted and rejected events to a new `logs/federation_activity.jsonl` for audit.
+
+
+#### 5) AutoGenBridge (Pending)
+- Not implemented in this pass.
+- Next: add `services/autogen/bridge.py` with:
+  - `register_agent()`, `run_autogen_task()`, `collect_trace()`
+  - Deterministic stub implementation for CI
+  - Append traces to `logs/autogen_bridge.jsonl`
+
+
+#### 6) `/autogen/run` Endpoint (Pending)
+- Not added in this pass.
+- Next: expose via `factory_agents/archivist/extra_endpoints.py` calling `AutoGenBridge.run_autogen_task()` and returning a normalized JSON trace.
+
+
+#### 7) Daily Compliance Verify (Pending)
+- Compliance integrity module added in Phase 20 work (and enhanced here): `services/security/integrity_guard.py`
+- Next: schedule a daily job to call `verify_ledger()` (Windows Task or async background loop), and add a metric line in `/metrics` for verify outcomes (e.g., failures/last run timestamp).
+
+
+#### 8) Integration Tests & Metrics (Partial)
+- CI lane already runs Archivist tests: `.github/workflows/ci.yml` → `pytest tests/archivist -v`.
+- New component tests (plugins, JWT federation, AutoGenBridge) will be added once those parts are wired in.
+- Unified metrics endpoint (`GET /metrics`) now aggregates:
+  - ReflectiveSync counters (runs/success/avg duration)
+  - Compliance ledger entry count
+  - Last drift score
+
+---
+
+### Files added/modified in this pass
+- Added
+  - `utils/migrate_memory_to_vector.py` — migration + local validation + report JSONL
+  - `factory_agents/archivist/plugins/openai.py` — normalized generate() stub
+  - `factory_agents/archivist/plugins/gemini.py` — normalized generate() stub
+  - `factory_agents/archivist/plugins/groq.py` — normalized generate() stub
+- Modified (supporting Phase 20 & 21 requirements)
+  - `factory_agents/archivist/extra_endpoints.py`
+    - Added unified `GET /metrics` aggregator
+  - `factory_agents/archivist/fastapi_server.py`
+    - Mounted the extra endpoints router and included ReflectiveSync startup hook (Phase 20 change used by Phase 21 plan)
+    - Enriched `GET /health` with ReflectiveSync metrics
+
+---
+
+### Validation guide
+
+1) Vector migration
+```bash
+python utils/migrate_memory_to_vector.py --validate
+# Output: JSON with {selected, inserted (if engine available), similarity_min, ok}
+# Report file: logs/vector_migration.jsonl
+```
+
+2) Metrics and health
+```bash
+uvicorn factory_agents.archivist.fastapi_server:app --reload --port 5065
+curl http://localhost:5065/metrics
+curl http://localhost:5065/health
+```
+Expect to see archivist_* counters in `/metrics` and ReflectiveSync section in `/health`.
+
+3) Federation stubs (HMAC)
+- Current HMAC helper is in extra endpoints (JWT coming next). You can test:
+  - Subscribe: `POST /federation/subscribe` (send form/body param `agent_id`)
+  - Broadcast: `POST /federation/broadcast` with fields `agent_id`, `payload`, `signature` (HMAC of payload with secret) → CSV appended at `compliance/audit_log/federation_updates.csv`.
+
+4) Governance dashboard & approvals
+```bash
+curl http://localhost:5065/dashboard
+# POST /governance/approve (event_id, reviewer, decision)
+```
+Expect last 50 firewall audit lines in the table.
+
+---
+
+### Remaining items (to complete Phase 21 fully)
+- Provider selection in `reasoning_core.py` (use `load_api_keys()` and route to plugin’s `generate()`; add tests under `tests/archivist/test_plugins.py`).
+- JWT federation (replace HMAC), add `logs/federation_activity.jsonl` and tests for accept/reject flows.
+- `services/autogen/bridge.py` + `/autogen/run` endpoint; add tests for deterministic traces.
+- Schedule daily compliance verify and add a compliance metric (failures/last_run) to `/metrics`.
+
+---
+
+### Governance & security notes
+- No secrets logged; the migration tool and plugin stubs run without external calls.
+- Federation currently uses HMAC stub; move to JWT for replay protection and timestamp enforcement.
+- Compliance ledger is append‑only; verify routine writes a summary to the firewall audit log and backs up the ledger.
+
+---
+
+### Recommendations for the Architect
+1) Approve PR to wire provider selection and add plugin tests.
+2) Approve PR to implement JWT federation + tests and create `logs/federation_activity.jsonl`.
+3) Approve PR to add AutoGenBridge and `/autogen/run` endpoint + unit tests.
+4) Approve a small scheduled task for daily compliance verify and metric exposure.
+
+With your go‑ahead, I can implement each remaining item as a separate, reviewable PR with unit tests and CI updates.

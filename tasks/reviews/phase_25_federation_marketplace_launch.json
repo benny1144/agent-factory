@@ -1,0 +1,11 @@
+{
+  "phase": 25,
+  "title": "Federation Marketplace Launch",
+  "action": "Publish initial .afpkg agents and crew catalog.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Publish initial .afpkg agents and crew catalog."
+  }
+}

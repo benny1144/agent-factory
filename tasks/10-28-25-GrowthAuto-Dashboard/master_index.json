@@ -1,0 +1,56 @@
+{
+  "date": "2025-10-28",
+  "project": "Agent Factory – Human Operations Layer & Federation Integration",
+  "maintainer": "Agent Factory Expert",
+  "description": "Sequential execution index for all Junie Task documents covering Phases 1–10 of the Agent Factory rollout.",
+  "execution_order": [
+    {
+      "id": 1,
+      "name": "01_HOL_Core_Infrastructure_Tasks.md",
+      "path": "/tasks/10-28-25/01_HOL_Core_Infrastructure_Tasks.md",
+      "phase": "1–3"
+    },
+    {
+      "id": 2,
+      "name": "02_Governance_Kernel_and_Middleware_Tasks.md",
+      "path": "/tasks/10-28-25/02_Governance_Kernel_and_Middleware_Tasks.md",
+      "phase": "4"
+    },
+    {
+      "id": 3,
+      "name": "03_Cloud_Logging_Integration_Tasks.md",
+      "path": "/tasks/10-28-25/03_Cloud_Logging_Integration_Tasks.md",
+      "phase": "5"
+    },
+    {
+      "id": 4,
+      "name": "04_Dashboard_and_Alerts_Tasks.md",
+      "path": "/tasks/10-28-25/04_Dashboard_and_Alerts_Tasks.md",
+      "phase": "6–7"
+    },
+    {
+      "id": 5,
+      "name": "05_Governance_Maturity_Extensions_Tasks.md",
+      "path": "/tasks/10-28-25/05_Governance_Maturity_Extensions_Tasks.md",
+      "phase": "8"
+    },
+    {
+      "id": 6,
+      "name": "06_Federation_Bus_and_Control_Plane_Tasks.md",
+      "path": "/tasks/10-28-25/06_Federation_Bus_and_Control_Plane_Tasks.md",
+      "phase": "9"
+    },
+    {
+      "id": 7,
+      "name": "07_Documentation_and_Deployment_Tasks.md",
+      "path": "/tasks/10-28-25/07_Documentation_and_Deployment_Tasks.md",
+      "phase": "10"
+    }
+  ],
+  "verification": {
+    "total_documents": 7,
+    "status": "ready_for_execution",
+    "checksum_method": "SHA256",
+    "review_required": true
+  }
+}

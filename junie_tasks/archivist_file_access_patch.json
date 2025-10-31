@@ -1,0 +1,25 @@
+{
+  "task_id": "patch_archivist_file_access",
+  "issued_by": "Operator_Benny",
+  "target_agent": "Archivist",
+  "timestamp": "2025-10-27T00:00:00Z",
+  "objective": "Implement and verify governed file access for Archy, ensuring full alignment with Genesis doctrines.",
+  "steps": [
+    {
+      "step": 1,
+      "action": "Create factory_agents/archivist/file_access.py with governed read/write logic."
+    },
+    {
+      "step": 2,
+      "action": "Audit existing integration modules (principles_loader.py, curator_api.py, fastapi_server.py) for doctrinal compliance."
+    },
+    {
+      "step": 3,
+      "action": "Register updated capabilities in governance ledger and confirm doctrine alignment."
+    }
+  ],
+  "handoff": {
+    "next_actor": "Junie",
+    "mode": "manual_or_automated"
+  }
+}

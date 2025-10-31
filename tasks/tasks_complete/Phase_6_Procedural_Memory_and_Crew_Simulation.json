@@ -1,0 +1,51 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Procedural Memory and Crew Simulation Sandbox (Archivist Phase 6)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "factory_agents/archivist/simulation_core.py"
+      ]
+    },
+    "Plan": [
+      "1) Create a new module simulation_core.py inside factory_agents/archivist/.",
+      "2) Implement sandboxed multi-agent simulation logic using CrewAI or AutoGen framework (lightweight mode).",
+      "3) Define a function simulate_crew(topic: str) that creates virtual agents (e.g., Strategist, Engineer, Philosopher) with assigned roles.",
+      "4) Use procedural memory pattern: log every message exchange into /logs/simulations/ with timestamps.",
+      "5) Add safe reflection layer — results are read-only and summarized for reasoning context.",
+      "6) Extend fastapi_server.py to handle messages starting with 'simulate crew '.",
+      "7) Confirm simulation outputs are coherent, formatted in Markdown, and stored persistently.",
+      "8) Ensure governance: no code execution beyond text reasoning, all actions logged."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/simulation_core.py",
+        "Change": """# === PATCH START ===\nimport os, datetime, json\n\nclass CrewAgent:\n    def __init__(self, name, role):\n        self.name = name\n        self.role = role\n\n    def respond(self, topic):\n        return f"[{self.role}] {self.name}: Considering {topic}, I propose we explore its systemic and cognitive dimensions."\n\ndef simulate_crew(topic: str):\n    \"\"\"Simulate a discussion among 3 virtual agents on a topic.\"\"\"\n    agents = [\n        CrewAgent('Athena', 'Strategist'),\n        CrewAgent('Daedalus', 'Engineer'),\n        CrewAgent('Socrates', 'Philosopher')\n    ]\n    dialogue = []\n    for agent in agents:\n        dialogue.append(agent.respond(topic))\n    log_dir = os.path.join('logs', 'simulations')\n    os.makedirs(log_dir, exist_ok=True)\n    timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H-%M-%SZ')\n    log_file = os.path.join(log_dir, f'simulation_{timestamp}.json')\n    with open(log_file, 'w') as f:\n        json.dump({'topic': topic, 'dialogue': dialogue}, f, indent=2)\n    formatted = '\n'.join([f"- {line}" for line in dialogue])\n    return f"🜂 **Crew Simulation Report**\n## Topic: {topic}\n{formatted}\n\nAll exchanges logged: {log_file}"\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nif message.lower().startswith('simulate crew '):\n    topic = message.replace('simulate crew ', '').strip()\n    from factory_agents.archivist import simulation_core\n    reply = simulation_core.simulate_crew(topic)\n    return {'reply': format_response(reply)}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server.",
+      "2) Send POST request: {\"message\":\"simulate crew the future of multi-agent ecosystems\"}.",
+      "3) Verify Markdown response includes 3 role-labeled lines.",
+      "4) Check /logs/simulations/ for newly created simulation log file.",
+      "5) Validate the log contains topic, dialogue array, and timestamp.",
+      "6) Confirm no code execution or external calls occur (sandbox mode)."
+    ],
+    "Verification": [
+      "Simulation runs in text-only mode with 3 coherent agent roles.",
+      "Markdown output displays readable discussion with headers.",
+      "Simulation file written to /logs/simulations/ successfully.",
+      "No security or sandbox violations detected."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/simulation_core.py",
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

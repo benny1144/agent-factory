@@ -1,0 +1,47 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Reconnect Reasoning to File Access (Archivist Phase 1)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "factory_agents/archivist/file_access.py",
+        "factory_agents/archivist/fastapi_server.py"
+      ]
+    },
+    "Plan": [
+      "1) Verify file_access.py exists and imports no circular dependencies.",
+      "2) Refactor safe_read() and governed_write() functions to operate independently of reasoning_core.",
+      "3) Define ALLOWED_ROOTS in file_access.py → ['factory_agents', 'knowledge_base', 'registry', 'docs', 'logs'].",
+      "4) Ensure file path validation via Path.resolve() and relative path normalization.",
+      "5) Update fastapi_server.py to use file_access.safe_read(), file_access.safe_write(), list_dir() handlers.",
+      "6) Test Archy chat endpoints to confirm access and governed write confirmation dialogs.",
+      "7) Log all file access operations in /logs/file_access_audit.log (append-only)."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/file_access.py",
+        "Change": "Refactor to remove reasoning_core imports and add ALLOWED_ROOTS enforcement using Pathlib."
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": "Integrate file_access functions directly into /chat POST route with error handling."
+      }
+    ],
+    "Tests": [
+      "Invoke-RestMethod -Uri 'http://localhost:5065/chat' -Method POST -Body '{\"message\":\"list factory_agents\"}'",
+      "Invoke-RestMethod -Uri 'http://localhost:5065/chat' -Method POST -Body '{\"message\":\"read factory_agents/archivist/main.py\"}'",
+      "Invoke-RestMethod -Uri 'http://localhost:5065/chat' -Method POST -Body '{\"message\":\"write knowledge_base/curated/test.md: hello world\"}'"
+    ],
+    "Verification": [
+      "All file reads and writes respond with success in formatted output.",
+      "Audit log entries appear in /logs/file_access_audit.log.",
+      "No path traversal or permission errors triggered."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/file_access.py",
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

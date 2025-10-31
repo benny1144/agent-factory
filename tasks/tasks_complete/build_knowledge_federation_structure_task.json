@@ -1,0 +1,76 @@
+{
+  "title": "Build Knowledge Federation Structure and Auto-Index System",
+  "preconditions": {
+    "repo": "benny1144/agent-factory",
+    "branch": "main",
+    "required_dirs": [
+      "knowledge_base/",
+      "tasks/"
+    ]
+  },
+  "plan": [
+    "1) Create new directory tree under /knowledge_base/:",
+    "   ├── core/",
+    "   ├── expansion/",
+    "   ├── agents/",
+    "   ├── datasets/",
+    "   ├── validation/",
+    "   └── index/",
+    "",
+    "2) Inside /knowledge_base/agents/, create subfolders for each agent:",
+    "   ├── archivist/",
+    "   │    ├── docs/",
+    "   │    ├── persona/",
+    "   │    ├── research/",
+    "   │    └── memory/",
+    "   ├── genesis/",
+    "   └── junie/",
+    "",
+    "3) Create placeholder index files in /knowledge_base/index/:",
+    "   - Core_Index.yaml",
+    "   - Expansion_Index.yaml",
+    "   - Agents_Index.yaml",
+    "   - Federation_Map.yaml",
+    "",
+    "4) Create utils/knowledge_indexer.py watcher:",
+    "   - Uses watchdog to monitor /knowledge_base/.",
+    "   - On file creation or update, automatically append to the appropriate index YAML.",
+    "   - Includes metadata: title, path, version, last_updated, indexed flag.",
+    "",
+    "5) Update Archivist reasoning_core.py:",
+    "   - Add method reindex_knowledge_base() that calls utils/knowledge_indexer.refresh().",
+    "   - Log updates to /logs/archivist_reindex.jsonl.",
+    "",
+    "6) Add Genesis integration hook:",
+    "   - When new agent scaffold created, auto-generate agent knowledge folders and register in Agents_Index.yaml.",
+    "",
+    "7) Governance:",
+    "   - Ensure Firewall approves directory creation and index file modifications.",
+    "   - Add provenance hashes for each new folder under /logs/validation/knowledge_tree_init.json."
+  ],
+  "edits": [
+    {
+      "path": "utils/knowledge_indexer.py",
+      "change": "Create new Python file implementing file watcher and YAML auto-indexer."
+    },
+    {
+      "path": "factory_agents/archivist/reasoning_core.py",
+      "change": "Add reindex_knowledge_base() method that refreshes cognitive registry after new uploads."
+    }
+  ],
+  "tests": [
+    "Run python utils/knowledge_indexer.py --scan to verify YAML index population.",
+    "Confirm new folders created under /knowledge_base/ with correct permissions.",
+    "Use Archivist API to run reindex_knowledge_base() and confirm logs are written."
+  ],
+  "verification": [
+    "Expansion_Index.yaml contains all 7 new whitepapers.",
+    "Core_Index.yaml lists foundational governance PDFs.",
+    "Agents_Index.yaml lists Archivist, Genesis, and Junie KB roots.",
+    "Watcher logs changes in /logs/knowledge_indexer.jsonl."
+  ],
+  "rollback": [
+    "Delete newly created /knowledge_base/index/*.yaml files if corruption detected.",
+    "Restore folder structure snapshot from /backups/knowledge_base_tree_v1."
+  ]
+}

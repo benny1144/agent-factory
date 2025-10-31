@@ -1,0 +1,3 @@
+# Middleware Hooks
+request_id: true
+audit_logging: true

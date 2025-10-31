@@ -1,0 +1,11 @@
+{
+  "phase": 33,
+  "title": "Post-Deployment Validation",
+  "action": "Verify all subsystems and archive /governance/factory_build_snapshot_v8.json.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Verify all subsystems and archive /governance/factory_build_snapshot_v8.json."
+  }
+}

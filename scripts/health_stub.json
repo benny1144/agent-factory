@@ -1,0 +1,6 @@
+{
+  "status": "ok",
+  "source": "stub",
+  "service": "disagreements.ai",
+  "note": "Local stub used for offline health check"
+}

@@ -1,0 +1,99 @@
+{
+  "title": "Archivist Phases 14–20 Full Implementation (Comprehensive Modular + DeepSpec Plan)",
+  "format": "hybrid-json-md",
+  "description": "This master document replaces all previous Phase 14–20 specifications. It merges the unified modular architecture plan with deep specifications for automation, governance, compliance, and orchestration.",
+  "phases": {
+    "14": {
+      "name": "Reflective Sync & Auto-Index Update",
+      "objectives": [
+        "Implement background ReflectiveSync service that auto-updates /registry/agent_catalog.yaml every 30 minutes.",
+        "Add retention policy: keep last 10 registry snapshots in /registry/history/.",
+        "Integrate /metrics endpoint exposing sync frequency, success rate, and duration."],
+      "implementation": "Create ReflectiveSync class in reasoning_core.py. Schedule via asyncio.create_task() + cron loop. Add metrics counters to telemetry/metrics_collector.py.",
+      "rollback": "Stop ReflectiveSync task and restore last valid catalog snapshot from history."
+    },
+    "15": {
+      "name": "Human Firewall Approval Layer",
+      "objectives": [
+        "Extend governance review to include /approve endpoint.",
+        "Create lightweight HTML dashboard in templates/governance_dashboard.html.",
+        "Record approvals and rejections in governance/firewall_audit.log with timestamp, reviewer, and event ID."],
+      "implementation": "Add FastAPI Jinja2Templates integration. Define GET /dashboard route. Embed audit summary and approval controls.",
+      "rollback": "Remove /dashboard template and revert /approve endpoint if conflict arises."
+    },
+    "16": {
+      "name": "Compliance Audit Kernel",
+      "objectives": [
+        "Implement ledger system with SHA-256 file integrity checks.",
+        "Store ledger at /governance/compliance_ledger.jsonl with JSON schema (entry_id, file_path, sha256, timestamp, status).",
+        "Add GCP sync stub in services/security/integrity_guard.py for remote verification."],
+      "implementation": "Hash validation integrated into integrity_guard.py. Cron job validates every 24h and posts summary to firewall_audit.log.",
+      "rollback": "Delete invalid ledger entries; restore backup ledger from /governance/backup/."
+    },
+    "17": {
+      "name": "Long-Term Vector Memory Expansion",
+      "objectives": [
+        "Migrate memory from JSONL to vector backend (FAISS/Qdrant).",
+        "Add migration script utils/migrate_memory_to_vector.py.",
+        "Validate embeddings via 100 random sample comparisons (cosine similarity > 0.95)."],
+      "implementation": "Implement vector_backend.py with class VectorMemoryAdapter. Provide CLI: python utils/migrate_memory_to_vector.py --source logs/memory.jsonl --target qdrant.",
+      "rollback": "Restore logs/memory.jsonl from pre-migration backup."
+    },
+    "18": {
+      "name": "External Intelligence Connectors",
+      "objectives": [
+        "Add plugin architecture for Gemini, Groq, and OpenAI connectors.",
+        "Implement normalization interface that standardizes model responses.",
+        "Include fallback policy if preferred LLM unavailable."],
+      "implementation": "Create factory_agents/archivist/plugins/ directory with plugin stubs for each LLM. Add normalize_response() function for consistent output schema.",
+      "rollback": "Disable failing connectors in factory_config/api_keys.yaml."
+    },
+    "19": {
+      "name": "Federated Learning & Insight Sharing",
+      "objectives": [
+        "Enable inter-agent knowledge propagation using authenticated federation events.",
+        "Define federation handshake: signed JWT with fields (agent_id, timestamp, signature).",
+        "Use event_dispatcher.py to publish and subscribe to peer updates."],
+      "implementation": "Add POST /federation/broadcast and /federation/subscribe endpoints. Validate JWT tokens and log accepted/rejected updates.",
+      "rollback": "Suspend federation tasks and invalidate keys in governance/federation_tokens.json."
+    },
+    "20": {
+      "name": "AutoGen Integration & Commercialization Prepare",
+      "objectives": [
+        "Create bridge to Modular AutoGen Framework (MAF).",
+        "Implement services/autogen/bridge.py with interface class AutoGenBridge. Methods: register_agent(), run_autogen_task(), collect_trace().",
+        "Add deployment YAML: deployment/archivist_autogen.yaml including container image, env vars, and startup command."],
+      "implementation": "Integrate AutoGenBridge into FastAPI via /autogen/run endpoint. Add tests/autogen/test_bridge.py for orchestration validation.",
+      "rollback": "Revert bridge.py and delete deployment YAML if MAF integration fails."
+    }
+  },
+  "tests": [
+    "pytest tests/archivist -v",
+    "pytest tests/services -v",
+    "pytest tests/autogen -v",
+    "curl localhost:5065/metrics",
+    "curl localhost:5065/federation/broadcast",
+    "curl localhost:5065/autogen/run"
+  ],
+  "verification": {
+    "success": [
+      "ReflectiveSync auto-indexing runs every 30m (check /metrics).",
+      "Governance dashboard accessible via /dashboard.",
+      "Compliance ledger hashes verified successfully.",
+      "Vector backend stores embeddings; migration validation passes.",
+      "Plugins load correctly for Gemini, Groq, and OpenAI.",
+      "Federation events exchanged and verified via JWT.",
+      "AutoGenBridge operational with passing orchestration tests."
+    ]
+  },
+  "rollback": {
+    "instructions": [
+      "Revert to latest successful commit before this deployment.",
+      "Disable ReflectiveSync cron if system unstable.",
+      "Restore governance and compliance ledgers from backups.",
+      "Revert FAISS/Qdrant memory adapter if migration integrity <0.95.",
+      "Comment out federation endpoints if cross-agent sync errors occur.",
+      "Rollback AutoGenBridge integration if orchestration fails."
+    ]
+  }
+}

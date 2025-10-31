@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-10-27",
+  "maintainer": "Archivist (Curator Agent)",
+  "document_type": "Federation Audit Digest Template",
+  "description": "This file defines the weekly audit digest schema for tracking and verifying all knowledge federation exchanges within the Agent Factory ecosystem.",
+
+  "digest_summary": {
+    "week_start": "YYYY-MM-DD",
+    "week_end": "YYYY-MM-DD",
+    "total_exchanges": 0,
+    "approved_transfers": 0,
+    "rejected_transfers": 0,
+    "revoked_nodes": 0,
+    "ethical_drift_flags": 0
+  },
+
+  "federation_activity": [
+    {
+      "timestamp": "YYYY-MM-DDTHH:MM:SSZ",
+      "partner_node": "EthicFlow",
+      "data_category": "Ethical Dataset",
+      "direction": "outbound",
+      "approval_status": "approved",
+      "reviewed_by": ["Human Firewall", "Governance Maintainer"],
+      "checksum_pre": "SHA256_HASH_BEFORE",
+      "checksum_post": "SHA256_HASH_AFTER",
+      "integrity_verified": true,
+      "drift_score": 0.02,
+      "remarks": "Routine weekly synchronization"
+    }
+  ],
+
+  "ethical_drift_monitor": {
+    "total_datasets_scanned": 0,
+    "drift_threshold": 0.1,
+    "flagged_entries": [],
+    "status": "stable"
+  },
+
+  "revocation_log": [
+    {
+      "partner_node": "",
+      "revocation_date": "YYYY-MM-DD",
+      "reason": "",
+      "action_taken": "access_revoked | quarantine_initiated"
+    }
+  ],
+
+  "signatures": {
+    "firewall": "HITL_SIGNATURE_PLACEHOLDER",
+    "maintainer": "GOVERNANCE_SIGNATURE_PLACEHOLDER",
+    "timestamp": "YYYY-MM-DDTHH:MM:SSZ"
+  },
+
+  "hash_integrity": {
+    "sha256_hash": "TBD",
+    "verified": false
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "ts": "2025-10-29T06:58:44.911481+00:00",
+  "python": "3.13.7",
+  "dirs": [
+    "governance",
+    "frontend",
+    "api",
+    "src",
+    "factory_agents"
+  ]
+}

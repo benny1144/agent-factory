@@ -1,0 +1,1 @@
+{"ok": true, "data": {"event": "db_schema_check", "ok": true, "tables": ["agent_registry", "audit_events"], "expected": ["agent_registry", "audit_events"]}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.803173+00:00", "source": "logs\\db_schema_check.jsonl"}}

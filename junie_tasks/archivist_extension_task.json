@@ -1,0 +1,29 @@
+{
+  "task_id": "extend_archivist",
+  "issued_by": "GenesisExecutor",
+  "target_agent": "Archivist",
+  "timestamp": "2025-10-27T05:55:49.510706+00:00",
+  "objective": "Extend Archivist with doctrinal and research integration capabilities.",
+  "steps": [
+    {
+      "step": 1,
+      "action": "Generate and implement missing integration modules."
+    },
+    {
+      "step": 2,
+      "action": "Link governance doctrine and global research APIs."
+    },
+    {
+      "step": 3,
+      "action": "Deploy and validate FastAPI service endpoints."
+    },
+    {
+      "step": 4,
+      "action": "Register updated agent in governance ledger."
+    }
+  ],
+  "handoff": {
+    "next_actor": "Junie",
+    "mode": "manual_or_automated"
+  }
+}

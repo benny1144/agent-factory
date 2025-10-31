@@ -1,0 +1,172 @@
+{
+  "phase": 0,
+  "title": "System Consolidation and Verification",
+  "action": "Verify project structure, governance kernel integrity, and baseline configuration.",
+  "status": "success",
+  "details": {
+    "duration_ms": 17,
+    "checks": [
+      {
+        "name": "exists: governance dir",
+        "passed": true,
+        "info": "governance"
+      },
+      {
+        "name": "exists: logs dir",
+        "passed": true,
+        "info": "logs"
+      },
+      {
+        "name": "exists: tasks dir",
+        "passed": true,
+        "info": "tasks"
+      },
+      {
+        "name": "exists: frontend dir",
+        "passed": true,
+        "info": "frontend"
+      },
+      {
+        "name": "exists: factory_agents dir",
+        "passed": true,
+        "info": "factory_agents"
+      },
+      {
+        "name": "exists: knowledge_base dir",
+        "passed": true,
+        "info": "knowledge_base"
+      },
+      {
+        "name": "exists: utils dir",
+        "passed": true,
+        "info": "utils"
+      },
+      {
+        "name": "exists: tools dir",
+        "passed": true,
+        "info": "tools"
+      },
+      {
+        "name": "exists: scripts dir",
+        "passed": true,
+        "info": "scripts"
+      },
+      {
+        "name": "exists: tests dir (optional)",
+        "passed": true,
+        "info": "tests"
+      },
+      {
+        "name": "exists: tasks_complete dir",
+        "passed": true,
+        "info": "tasks\\tasks_complete"
+      },
+      {
+        "name": "exists: governance/policies dir",
+        "passed": true,
+        "info": "governance\\policies"
+      },
+      {
+        "name": "ensure file: ethical_drift_monitor.yaml",
+        "passed": true,
+        "info": "exists"
+      },
+      {
+        "name": "ensure file: federation_policies.yaml",
+        "passed": true,
+        "info": "exists"
+      },
+      {
+        "name": "ensure file: compliance_kernel.py",
+        "passed": true,
+        "info": "exists"
+      },
+      {
+        "name": "env presence: openai",
+        "passed": true,
+        "info": "OPENAI_API_KEY present"
+      },
+      {
+        "name": "yaml presence: openai",
+        "passed": true,
+        "info": "present"
+      },
+      {
+        "name": "env/yaml match: openai",
+        "passed": true,
+        "info": "match"
+      },
+      {
+        "name": "env presence: gemini",
+        "passed": false,
+        "info": "GEMINI_API_KEY missing"
+      },
+      {
+        "name": "yaml presence: gemini",
+        "passed": true,
+        "info": "present"
+      },
+      {
+        "name": "env/yaml match: gemini",
+        "passed": false,
+        "info": "mismatch or insufficient data"
+      },
+      {
+        "name": "env presence: groq",
+        "passed": true,
+        "info": "GROQ_API_KEY present"
+      },
+      {
+        "name": "yaml presence: groq",
+        "passed": true,
+        "info": "present"
+      },
+      {
+        "name": "env/yaml match: groq",
+        "passed": true,
+        "info": "match"
+      },
+      {
+        "name": "exists: README.md",
+        "passed": true,
+        "info": "README.md"
+      },
+      {
+        "name": "exists: pyproject.toml",
+        "passed": true,
+        "info": "pyproject.toml"
+      },
+      {
+        "name": "exists: requirements.txt",
+        "passed": true,
+        "info": "requirements.txt"
+      },
+      {
+        "name": "exists: tasks json",
+        "passed": true,
+        "info": "tasks\\AgentFactory_MasterBuild_Phase0_35.json"
+      },
+      {
+        "name": "exists: execution policy",
+        "passed": true,
+        "info": "governance\\policies\\junie_execution_policy.yaml"
+      },
+      {
+        "name": "exists: utils/paths.py",
+        "passed": true,
+        "info": "utils\\paths.py"
+      },
+      {
+        "name": "policy sanity",
+        "passed": true,
+        "info": "ok"
+      },
+      {
+        "name": "logs writable",
+        "passed": true,
+        "info": "logs"
+      }
+    ],
+    "errors": []
+  }
+}

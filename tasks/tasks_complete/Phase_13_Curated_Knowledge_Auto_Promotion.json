@@ -1,0 +1,53 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Curated Knowledge Auto-Promotion System (Archivist Phase 13)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "knowledge_base/curated/",
+        "tasks/pending/"
+      ]
+    },
+    "Plan": [
+      "1) Extend reasoning_core.py with logic to identify high-quality outputs suitable for knowledge promotion.",
+      "2) When Archy generates a long-form structured or well-rated document (>300 tokens, Markdown-structured), store it as a new file in /knowledge_base/curated/ with a timestamped version name.",
+      "3) Automatically create a matching [GENESIS REQUEST] file in /tasks/pending/ describing the content and reason for promotion.",
+      "4) Include metadata: author='Archivist', file path, content hash, governance justification.",
+      "5) Add 'promote knowledge' manual command to trigger the same flow manually.",
+      "6) Log all promotion attempts and generated files to /logs/curation_audit.log.",
+      "7) Ensure auto-promotion occurs only if output passes persona alignment and risk level ≤ Medium.",
+      "8) Governance safeguard: never overwrite; always version files as *_vNN.md."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/reasoning_core.py",
+        "Change": """# === PATCH START ===\nimport hashlib\n\ndef auto_promote_curated(output_text: str, source: str = 'chat'):\n    \"\"\"Automatically promote valuable content to curated knowledge and draft GENESIS REQUEST.\"\"\"\n    os.makedirs('knowledge_base/curated', exist_ok=True)\n    os.makedirs('tasks/pending', exist_ok=True)\n    os.makedirs('logs', exist_ok=True)\n    if len(output_text) < 300:\n        return 'Output too short for curation.'\n\n    content_hash = hashlib.sha256(output_text.encode()).hexdigest()[:12]\n    timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H-%M-%SZ')\n    curated_name = f"curated_entry_{timestamp}.md"\n    curated_path = os.path.join('knowledge_base', 'curated', curated_name)\n    with open(curated_path, 'w', encoding='utf-8') as f:\n        f.write(output_text)\n\n    genesis_request = f"""[GENESIS REQUEST]\nTitle: Promote Curated Knowledge Entry\nSource: {source}\nTimestamp: {timestamp}\nCurated File: {curated_path}\nHash: {content_hash}\nJustification: High-value structured content suitable for Factory Knowledge Base.\nGovernance: Requires review by Genesis and Firewall approval.\n"""\n    req_name = f"genesis_request_{timestamp}.json"\n    req_path = os.path.join('tasks', 'pending', req_name)\n    with open(req_path, 'w', encoding='utf-8') as r:\n        r.write(genesis_request)\n    with open(os.path.join('logs', 'curation_audit.log'), 'a', encoding='utf-8') as log:\n        log.write(f"[PROMOTION] {timestamp} - {curated_name} -> {req_name}\n")\n    return f"✅ Curated entry promoted: {curated_name}\nGENESIS REQUEST created: {req_name}"\n\n# Integrate into think()\nold_think_promote = think\ndef think(message: str):\n    reply = old_think_promote(message)\n    if len(reply) > 300 and ('##' in reply or '###' in reply):\n        result = auto_promote_curated(reply)\n        reply += f"\\n\\n🜂 Curation Notice: {result}"\n    return reply\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nif message.lower().strip() == 'promote knowledge':\n    from factory_agents.archivist import reasoning_core\n    result = reasoning_core.auto_promote_curated('Manual promotion initiated by user.', 'manual')\n    return {'reply': format_response({'reply': result})}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server.",
+      "2) Send message generating a long structured response (≥300 tokens, Markdown formatted).",
+      "3) Confirm auto-promotion triggered and logs written to /logs/curation_audit.log.",
+      "4) Verify new file created in /knowledge_base/curated/ and corresponding GENESIS REQUEST in /tasks/pending/.",
+      "5) Send 'promote knowledge' to test manual trigger.",
+      "6) Validate governance logs, timestamps, and hashes."
+    ],
+    "Verification": [
+      "Curated entries generated correctly with GENESIS REQUEST files.",
+      "Audit log shows both automatic and manual promotion attempts.",
+      "Governance metadata consistent across all generated artifacts.",
+      "Output remains read-only and fully reversible."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/reasoning_core.py",
+      "git restore factory_agents/archivist/fastapi_server.py",
+      "rm -r knowledge_base/curated/* tasks/pending/* logs/curation_audit.log"
+    ]
+  }
+}

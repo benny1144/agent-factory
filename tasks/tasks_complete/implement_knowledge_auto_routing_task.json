@@ -1,0 +1,61 @@
+{
+  "title": "Implement Auto-Routing and Classification Logic for Knowledge Indexer",
+  "preconditions": {
+    "repo": "benny1144/agent-factory",
+    "branch": "main",
+    "required_files": ["utils/knowledge_indexer.py"],
+    "dependencies": ["PyYAML", "watchdog"]
+  },
+  "plan": [
+    "1) Extend utils/knowledge_indexer.py to include categorize_upload() function:",
+    "   - Classifies documents based on filename and content keywords (e.g., 'Protocol', 'Research', 'Dataset').",
+    "   - Returns one of: core, expansion, agents, datasets, validation.",
+    "",
+    "2) Implement auto_routing() logic:",
+    "   - Detects new files added under /knowledge_base/ or /docs/ via watchdog observer.",
+    "   - Moves or copies new file into appropriate subdirectory (e.g., /knowledge_base/core/).",
+    "   - Appends metadata (title, path, timestamp, category) to the correct YAML index.",
+    "",
+    "3) Update indexing schema:",
+    "   - Each YAML index file (Core_Index, Expansion_Index, etc.) supports auto-append mode.",
+    "   - Include fields: id, title, path, version, indexed, last_updated, status.",
+    "",
+    "4) Add logging hooks:",
+    "   - Log each classification event to /logs/knowledge_indexer.jsonl.",
+    "   - Include original_path, final_path, assigned_category, confidence_score.",
+    "",
+    "5) Implement command line usage:",
+    "   Example: python utils/knowledge_indexer.py --watch or --scan",
+    "   - --watch: continuously monitor /knowledge_base/ for changes.",
+    "   - --scan: re-scan entire knowledge base and rebuild YAML indexes.",
+    "",
+    "6) Governance & Safety:",
+    "   - Ensure Firewall validates destination paths before moving any files.",
+    "   - Maintain rollback file list at /logs/knowledge_routing_backup.jsonl.",
+    "   - Prohibit overwriting existing core documents without manual approval.",
+    "",
+    "7) Optional Future Enhancement:",
+    "   - Integrate small LLM classifier (OpenAI embedding) for semantic file categorization.",
+    "   - Example: classify document purpose beyond filename patterns."
+  ],
+  "edits": [
+    {
+      "path": "utils/knowledge_indexer.py",
+      "change": "Add categorize_upload(), auto_routing(), and YAML append utilities with watchdog integration."
+    }
+  ],
+  "tests": [
+    "Upload new document to /docs/ and confirm file moves to appropriate /knowledge_base/ subfolder.",
+    "Run python utils/knowledge_indexer.py --scan and verify index YAML files auto-update.",
+    "Check /logs/knowledge_indexer.jsonl for classification entries."
+  ],
+  "verification": [
+    "New files are categorized accurately with >95% precision.",
+    "All moved files maintain integrity via SHA-256 hash comparison.",
+    "Expansion_Index.yaml and Core_Index.yaml show new entries with correct metadata."
+  ],
+  "rollback": [
+    "Restore files to original /docs/ directory using /logs/knowledge_routing_backup.jsonl.",
+    "Revert YAML indexes from prior snapshot in /backups/knowledge_index_v1."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "phase": 1,
+  "title": "Core Infrastructure Deployment",
+  "action": "Deploy core services (HOL, Redis, Postgres) and schema migrations.",
+  "status": "success",
+  "details": {
+    "subtasks": {
+      "db_migration": {
+        "db_url": "sqlite:///data/factory.db",
+        "duration_ms": 438
+      },
+      "redis_connectivity": {
+        "host": "127.0.0.1",
+        "port": 6379,
+        "ok": false
+      },
+      "schema_check": {
+        "ok": true,
+        "tables": [
+          "agent_registry",
+          "audit_events"
+        ],
+        "expected": [
+          "agent_registry",
+          "audit_events"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+version: 1
+message:
+  type: object
+  properties:
+    sender: {type: string}
+    recipient: {type: string}
+    content: {type: string}
+  required: [sender, recipient, content]

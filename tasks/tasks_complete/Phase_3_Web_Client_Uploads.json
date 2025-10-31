@@ -1,0 +1,47 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Web Client Uploads and Browser Interface (Archivist Phase 3)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/web_client.py",
+        "factory_agents/archivist/fastapi_server.py"
+      ]
+    },
+    "Plan": [
+      "1) Extend web_client.py to include HTML/JS-based web UI supporting message input, send button, and file upload element.",
+      "2) Add /upload endpoint to fastapi_server.py to accept file uploads and store them under /knowledge_base/uploaded/.",
+      "3) Ensure uploaded files are accessible to Archy’s read functions for contextual reference.",
+      "4) Include success confirmation message and audit log entry in /logs/file_access_audit.log.",
+      "5) Test file upload through browser and verify system response and file existence."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/web_client.py",
+        "Change": """# === PATCH START ===\nfrom fastapi import APIRouter\nfrom fastapi.responses import HTMLResponse\n\nweb_router = APIRouter()\n\n@web_router.get('/', response_class=HTMLResponse)\nasync def get_ui():\n    return '''\n    <html>\n    <head>\n        <title>🜂 Archy Interface</title>\n        <style>\n            body { background-color: #0e1117; color: #e6edf3; font-family: Segoe UI, sans-serif; padding: 2em; }\n            #chat { max-width: 900px; margin: auto; }\n            textarea { width: 100%; height: 120px; border-radius: 10px; background: #161b22; color: white; padding: 10px; }\n            button { background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }\n            input[type=file] { margin-top: 10px; }\n            pre, code { background: #161b22; padding: 8px; border-radius: 8px; color: #d1d5db; }\n        </style>\n        <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>\n    </head>\n    <body>\n        <div id='chat'>\n            <h2>🜂 Archy Browser Console</h2>\n            <textarea id='msg' placeholder='Type a message...'></textarea><br>\n            <button onclick='send()'>Send</button>\n            <input type='file' id='fileUpload' onchange='uploadFile()' />\n            <div id='log'></div>\n        </div>\n        <script>\n            async function send() {\n                const msg = document.getElementById('msg').value;\n                const res = await fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message: msg})});\n                const data = await res.json();\n                const html = marked.parse(data.reply);\n                document.getElementById('log').innerHTML += `<div><b>🧑 You:</b> ${msg}</div><div>${html}</div><hr>`;\n            }\n            async function uploadFile() {\n                const file = document.getElementById('fileUpload').files[0];\n                const formData = new FormData();\n                formData.append('file', file);\n                const res = await fetch('/upload', {method:'POST', body: formData});\n                const data = await res.json();\n                document.getElementById('log').innerHTML += `<div>📂 ${data.message}</div>`;\n            }\n        </script>\n    </body>\n    </html>\n    '''\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nfrom fastapi import File, UploadFile\nimport shutil, os\n\n@app.post('/upload')\nasync def upload_file(file: UploadFile = File(...)):\n    upload_dir = os.path.join('knowledge_base', 'uploaded')\n    os.makedirs(upload_dir, exist_ok=True)\n    file_path = os.path.join(upload_dir, file.filename)\n    with open(file_path, 'wb') as buffer:\n        shutil.copyfileobj(file.file, buffer)\n    with open(os.path.join('logs', 'file_access_audit.log'), 'a') as log:\n        log.write(f"[UPLOAD] {file.filename} -> {file_path}\n")\n    return {'status': 'success', 'message': f'File uploaded: {file.filename}', 'path': file_path}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Start Archy server and navigate to http://localhost:5065/.",
+      "2) Use the web form to upload a test file (e.g., demo.txt).",
+      "3) Confirm '📂 File uploaded: demo.txt' message appears in chat log.",
+      "4) Verify uploaded file exists under knowledge_base/uploaded/.",
+      "5) Check /logs/file_access_audit.log for correct entry." 
+    ],
+    "Verification": [
+      "Web client loads successfully in browser.",
+      "File upload works and returns proper success message.",
+      "Audit log entry confirms file storage event.",
+      "Uploaded file accessible to Archy read commands (read knowledge_base/uploaded/demo.txt)."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/web_client.py",
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

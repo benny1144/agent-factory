@@ -1,0 +1,75 @@
+{
+  "title": "Setup AgentFactoryExpert Federation Integration",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or feature/federation-setup",
+    "directories": ["/federation", "/governance"],
+    "firewall_status": "manual_approved: true"
+  },
+  "plan": {
+    "steps": [
+      "1. Create /federation/context_manifest.json defining federation between AgentFactoryExpert, Genesis, Archy, and DashboardUI.",
+      "2. Add /governance/federation_audit.jsonl with approval record of federation link.",
+      "3. Validate IDE bridge connection and federation visibility across agents.",
+      "4. Confirm shared context directories (/tasks, /logs, /knowledge_base, /governance) accessible to all linked agents.",
+      "5. Write registration confirmation event to /logs/federation_activity.jsonl."
+    ]
+  },
+  "edits": [
+    {
+      "path": "/federation/context_manifest.json",
+      "change": "Create JSON manifest linking AgentFactoryExpert, Genesis, Archy, and DashboardUI with shared context and permissions."
+    },
+    {
+      "path": "/governance/federation_audit.jsonl",
+      "change": "Add approval record noting AgentFactoryExpert integration and federation setup."
+    }
+  ],
+  "files": {
+    "/federation/context_manifest.json": {
+      "agents": ["AgentFactoryExpert", "Genesis", "Archy", "DashboardUI"],
+      "shared_context": {
+        "tasks": "/tasks/",
+        "logs": "/logs/",
+        "knowledge": "/knowledge_base/",
+        "governance": "/governance/"
+      },
+      "permissions": {
+        "AgentFactoryExpert": ["read", "write"],
+        "Genesis": ["read", "write"],
+        "Archy": ["read"],
+        "DashboardUI": ["read"]
+      }
+    },
+    "/governance/federation_audit.jsonl": [
+      {
+        "timestamp": "2025-10-27T14:30:00Z",
+        "approved_by": "human",
+        "link": ["AgentFactoryExpert", "Genesis", "Archy", "DashboardUI"],
+        "scope": "federated_context",
+        "status": "approved"
+      }
+    ]
+  },
+  "tests": [
+    "Verify /federation/context_manifest.json contains all listed agents.",
+    "Check /governance/federation_audit.jsonl for approval entry.",
+    "Confirm AgentFactoryExpert writes to /tasks and /logs without permission errors.",
+    "Run federation sync simulation to ensure agents can read shared context."
+  ],
+  "verification": {
+    "success": [
+      "/federation/context_manifest.json created and validated.",
+      "/governance/federation_audit.jsonl entry approved.",
+      "AgentFactoryExpert successfully registered in shared context.",
+      "Federation activity log updated."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "git checkout HEAD~1 -- /federation/context_manifest.json",
+      "rm /governance/federation_audit.jsonl"
+    ]
+  },
+  "result": "AgentFactoryExpert is officially federated with Genesis, Archy, and DashboardUI, enabling shared context and synchronized task coordination across the Agent Factory ecosystem."
+}

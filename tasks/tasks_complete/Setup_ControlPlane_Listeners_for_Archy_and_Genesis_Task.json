@@ -1,0 +1,48 @@
+{
+  "title": "Setup Control Plane Listeners for Archy and Genesis",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or release/federation-live",
+    "federation_manifest": "/federation/context_manifest.json active",
+    "governance_approval": "manual_approved: true",
+    "agent_registration": "AgentFactoryExpert linked via Setup_AgentFactoryExpert_Federation_Task.json"
+  },
+  "plan": {
+    "steps": [
+      "1. Add Control Plane Listener module for Archy under /factory_agents/archivist/control_plane_listener.py.",
+      "2. Modify /factory_agents/architect_genesis/task_manager.py to detect and respond to AgentFactoryExpert directives.",
+      "3. Create /tasks/from_expert/ and /tasks/to_expert/ directories for shared JSON-based communication.",
+      "4. Update /governance/federation_audit.jsonl with new linkage events for cross-agent communication.",
+      "5. Create /logs/control_plane_activity.jsonl for audit-tracked inter-agent messages."
+    ]
+  },
+  "edits": [
+    {"path": "factory_agents/archivist/control_plane_listener.py", "change": "Implement listener to parse /tasks/from_expert/ JSON directives and log responses to /tasks/to_expert/."},
+    {"path": "factory_agents/architect_genesis/task_manager.py", "change": "Add conditional to detect tasks where 'source' == 'AgentFactoryExpert' and respond with status acknowledgment."},
+    {"path": "governance/federation_audit.jsonl", "change": "Append audit entries for new AgentFactoryExpert ↔ Archy/Genesis communication links."},
+    {"path": "logs/control_plane_activity.jsonl", "change": "Create log file for all inter-agent communication events."}
+  ],
+  "tests": [
+    "python factory_agents/archivist/control_plane_listener.py --test",
+    "pytest tests/genesis/test_task_manager.py -v",
+    "echo '{\\\"type\\\":\\\"audit_request\\\",\\\"source\\\":\\\"AgentFactoryExpert\\\"}' > tasks/from_expert/test.json",
+    "python factory_agents/archivist/control_plane_listener.py",
+    "cat tasks/to_expert/*"
+  ],
+  "verification": {
+    "success": [
+      "/factory_agents/archivist/control_plane_listener.py operational.",
+      "/factory_agents/architect_genesis/task_manager.py acknowledges Expert directives.",
+      "/tasks/from_expert/ and /tasks/to_expert/ directories created and functional.",
+      "/logs/control_plane_activity.jsonl contains communication records.",
+      "Federation audit updated with new communication events."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "git checkout HEAD~1 -- factory_agents/archivist/control_plane_listener.py factory_agents/architect_genesis/task_manager.py",
+      "rm -rf tasks/from_expert tasks/to_expert logs/control_plane_activity.jsonl"
+    ]
+  },
+  "result": "Archy and Genesis now listen, acknowledge, and respond asynchronously to AgentFactoryExpert directives, completing the Agent Factory's federated control communication layer."
+}

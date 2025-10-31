@@ -1,0 +1,5 @@
+# Human Firewall runtime flags
+# This file is used by scripts/preflight.py to gate cleanup execution.
+confirm_cleanup: true
+# Allow Genesis reactivation via tools/genesis_admin.py (HITL-controlled)
+allow_genesis_reactivation: true

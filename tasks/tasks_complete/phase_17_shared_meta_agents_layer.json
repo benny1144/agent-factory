@@ -1,0 +1,11 @@
+{
+  "phase": 17,
+  "title": "Shared Meta-Agents Layer",
+  "action": "Deploy Prometheus (R&D) and Compliance Kernel meta-agents.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Deploy Prometheus (R&D) and Compliance Kernel meta-agents."
+  }
+}

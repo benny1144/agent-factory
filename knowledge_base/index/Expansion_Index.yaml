@@ -1,0 +1,46 @@
+version: '1.0'
+generated_by: utils/knowledge_indexer.py
+last_updated: '2025-10-28T16:30:10.026677+00:00'
+items:
+- title: '---'
+  path: knowledge_base/expansion/Agent_Factory_Implementation_Guide_Phase2-3.md
+  version: v1
+  last_updated: '2025-10-28T16:30:10.020903+00:00'
+  indexed: true
+  sha256: 492999fd82c5ef6ba1620dc7c40c57596c17aab07dbce4208a5c3db992517c33
+- title: '---'
+  path: knowledge_base/expansion/Enterprise_Deployment_Case_Studies.md
+  version: v1
+  last_updated: '2025-10-28T16:30:10.022103+00:00'
+  indexed: true
+  sha256: 5ef9387c43d7b50aca76d03ab1482dba49f3b7d571b88068fd7ab0010653fb99
+- title: '---'
+  path: knowledge_base/expansion/EthicFlow_Dataset_Specification.md
+  version: v1
+  last_updated: '2025-10-28T16:30:10.022891+00:00'
+  indexed: true
+  sha256: 3b3803058c51872a201594319bd2c07cbec6c6f01378c9bf42642cfc9382bf15
+- title: '---'
+  path: knowledge_base/expansion/Human_AI_Governance_Board_Manual.md
+  version: v1
+  last_updated: '2025-10-28T16:30:10.023757+00:00'
+  indexed: true
+  sha256: e279b5c6b54646b4d370e3bb175e5b741f3f2995d399fadf601b42f881a92f57
+- title: '---'
+  path: knowledge_base/expansion/Local_Validation_and_Provenance_Specs.md
+  version: v1
+  last_updated: '2025-10-28T16:30:10.024611+00:00'
+  indexed: true
+  sha256: 16b97e6fc106733e0e951b99b626d5f28a069589000fb94e352e5fc4f426ae6c
+- title: '---'
+  path: knowledge_base/expansion/Operational_Governance_Console_UX_Research.md
+  version: v1
+  last_updated: '2025-10-28T16:30:10.025426+00:00'
+  indexed: true
+  sha256: 5afb6eb50ed65925dac7bbd1a974ff1a285fb6bf0ef638db11e90f442ffac23b
+- title: '---'
+  path: knowledge_base/expansion/RAG_Optimization_Case_Studies.md
+  version: v1
+  last_updated: '2025-10-28T16:30:10.026149+00:00'
+  indexed: true
+  sha256: aee2d38959a296fe20c14a6c3085aceaf81718900ff7528f54f16a7506051210

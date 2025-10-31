@@ -1,0 +1,6 @@
+{
+  "ethical_drift_max": 0.05,
+  "reinforcement_efficiency_min": 0.6,
+  "kba_latency_days_max": 30,
+  "governance_coverage_min": 1
+}

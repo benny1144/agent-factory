@@ -7,3 +7,6 @@ httpx
 prometheus-client
 websockets
 python-multipart
+openai>=1.0.0
+requests
+fastapi-jwt-auth

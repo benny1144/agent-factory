@@ -1,0 +1,11 @@
+{
+  "phase": 15,
+  "title": "Organization Dashboard Overlay",
+  "action": "Extend UI for multi-org analytics and RBAC.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Extend UI for multi-org analytics and RBAC."
+  }
+}

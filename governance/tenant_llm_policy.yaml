@@ -1,0 +1,2 @@
+providers: [openai, gemini, anthropic]
+policy: allow

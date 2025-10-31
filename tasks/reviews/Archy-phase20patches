@@ -1,0 +1,83 @@
+### Archivist Phase 20 — Certification & Final Validation (Detailed Report)
+
+This report documents the execution of `tasks/Archivist_Phase20_Certification_and_Final_Test_Task.json`, the code changes made, validation steps, outcomes, remaining items, and recommendations for the Architect. All additions are governance‑safe (append‑only logs/ledgers) and avoid external dependencies unless provided via env/YAML.
+
+---
+
+## 1) Compliance Ledger Verification
+- Added module: `services/security/integrity_guard.py`
+  - `sha256_file(path)` — compute SHA‑256 for integrity
+  - `append_ledger_entry(file_path, status='recorded')` — append JSONL ledger rows to `governance/compliance_ledger.jsonl`
+  - `verify_ledger(paths=None)` — verifies recent ledger items (or given file list), writes a summary to `governance/firewall_audit.log`, and backs up the ledger to `governance/backup/ledger_backup_<ts>.jsonl`
+- Manual CLI: `python -m services.security.integrity_guard`
+- Status: Implemented. Daily scheduling is recommended next.
+
+## 2) ReflectiveSync + Unified /metrics
+- ReflectiveSync implemented (Phase 14) and mounted on FastAPI startup to rebuild the AST‑enriched catalog every 30 minutes with snapshot retention in `registry/history/`.
+- Unified metrics endpoint: `factory_agents/archivist/extra_endpoints.py`
+  - `GET /archivist/metrics` (text)
+  - `GET /metrics` aggregates: ReflectiveSync counters, compliance ledger entry count, last drift score
+- `/health` now includes ReflectiveSync metrics for quick readiness checks.
+- Status: Implemented.
+
+## 3) Vector Memory Migration — Pending
+- Script `utils/migrate_memory_to_vector.py` not added in this pass.
+- Recommendation: implement migration from JSONL → MemoryEngine (FAISS/Qdrant) with 100‑sample cosine validation (>0.95) and a migration `[AUDIT]` report.
+
+## 4) Federation Broadcast (JWT) — Partial
+- Exposed stubs (`extra_endpoints.py`): `POST /federation/subscribe` and `POST /federation/broadcast` using shared‑secret HMAC.
+- Recommendation: replace HMAC with JWT (exp/iat/nbf) using `pyjwt`; log accept/reject reasons with CSV + firewall audit.
+
+## 5) LLM Plugins — Pending
+- Plugin stubs for OpenAI/Gemini/Groq not added in this pass.
+- Recommendation: create `factory_agents/archivist/plugins/{openai.py,gemini.py,groq.py}` exporting `generate(prompt, **opts)` with normalized output: `{ ok, model, text, tokens, finish_reason }`, and provider selection in `reasoning_core.py` via `load_api_keys()`.
+
+## 6) AutoGen Bridge — Pending
+- Bridge file and endpoint not added in this pass.
+- Recommendation: add `services/autogen/bridge.py` with `AutoGenBridge` and `/autogen/run` endpoint, producing deterministic traces for CI; log to `logs/autogen_bridge.jsonl`.
+
+## 7) Governance Dashboard & Approvals
+- Minimal dashboard (`GET /dashboard`) shows last 50 `governance/firewall_audit.log` lines.
+- `POST /governance/approve` appends JSON records to firewall audit; complements existing `POST /governance/review`.
+- Status: Implemented (minimal UI; can be expanded with templates/CSS).
+
+## 8) Final Health & Drift Check
+- `/health` → `{ ok, service, reflective_sync: { runs, success, avg_duration, last_error } }`
+- Drift is continually logged to `logs/persona_drift.log` (OpenAI embeddings → sentence‑transformers → Jaccard fallback).
+- Threshold (<0.05) remains an operator check; recommend surfacing `archivist_persona_drift_last_score` (already in `/metrics`) on your dashboard.
+
+## 9) CI/Tests
+- CI lane: `.github/workflows/ci.yml` runs `pytest tests/archivist -v`.
+- Existing Archivist tests cover drift/risk/versioning; broaden as new Phase 16–20 modules are added.
+
+## 10) Certification Report Artifact
+- Created `reports/archivist_phase20_certification.json` with:
+  - Status: `provisionally_ready`
+  - Blocking items: vector migration, plugins, JWT federation, AutoGen bridge, daily compliance scheduler
+  - Checks & endpoints (`/metrics`, `/dashboard`, `/health`), and CI pointers
+
+---
+
+## Validation Checklist
+- Health & Metrics
+  - `GET /health` → includes `reflective_sync`
+  - `GET /metrics` → shows `archivist_reflective_sync_runs_total`, `archivist_compliance_ledger_entries_total`, `archivist_persona_drift_last_score`
+- Compliance
+  - `python -m services.security.integrity_guard` → summary appended to `governance/firewall_audit.log` and backup written
+- Federation (stub)
+  - `POST /federation/subscribe` and HMAC‑signed `POST /federation/broadcast` → CSV append under `compliance/audit_log/federation_updates.csv`
+- Governance dashboard
+  - `GET /dashboard` → shows approve/review/audit lines
+- CI
+  - `pytest tests/archivist -v`
+
+---
+
+## Recommendations for Architect
+1) Schedule daily compliance verify (Windows Task or async loop) and add a metric for verify failures.
+2) Implement `utils/migrate_memory_to_vector.py` with a deterministic local embedding fallback for CI.
+3) Add LLM plugin stubs with normalized schema and a simple selector in `reasoning_core.py`.
+4) Harden federation with JWT (exp/iat/nbf) and log accept/reject reasons.
+5) Add AutoGen bridge + `/autogen/run` endpoint and tests with a deterministic trace.
+
+With your approval, I can implement these remaining items in small PRs (one phase per PR) with unit tests and CI wiring.

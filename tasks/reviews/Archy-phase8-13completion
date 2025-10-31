@@ -1,0 +1,124 @@
+### Phase 8–13 tasks executed and report delivered
+
+I executed the attached Archy phase tasks sequentially (8 → 13), implemented the required code and command triggers, and produced a detailed completion report.
+
+- Report file created: tasks/tasks_complete/Archy-phase8-13completion
+- Timestamp: 2025-10-27 23:56 (local time)
+
+Below is a comprehensive summary of what was implemented, how to validate, and issues to watch.
+
+#### Important note about the task files
+The `tasks/Phase_*.json` files embed patch blocks inside JSON and are not valid machine‑parseable JSON. I treated them as human‑readable specs and implemented the equivalent changes directly in the codebase, matching intent and location.
+
+---
+
+### What I implemented (by phase)
+
+#### Phase 8 — Self‑Indexing & Auto‑Documentation
+Purpose: Build a self-maintained registry of agents/personas/tools.
+- Added to `factory_agents/archivist/reasoning_core.py`:
+  - `summarize_file(path)` — extracts first comment/docstring line and last‑modified time.
+  - `build_agent_catalog()` — scans `factory_agents/**/*.py/.yaml`, writes `registry/agent_catalog.yaml` and timestamped backups under `registry/backups/`, and appends to `logs/registry_audit.log`.
+- Added chat trigger in `factory_agents/archivist/fastapi_server.py`:
+  - Type: `update registry` → rebuilds catalog, returns a success message.
+- Artifacts:
+  - `registry/agent_catalog.yaml`
+  - `registry/backups/catalog_<epoch>.yaml`
+  - `logs/registry_audit.log`
+
+#### Phase 9 — Health & Diagnostic Engine
+Purpose: Diagnostics for directories, dependencies, and API keys.
+- New file: `factory_agents/archivist/healthcheck.py`
+  - `run_health_diagnostics()` checks dirs (logs, knowledge_base, registry, compliance, memory_store), best‑effort imports (fastapi, uvicorn, pydantic, dotenv, sqlalchemy, httpx, openai, requests, yaml, numpy), and loads keys from `factory_config/api_keys.env` when available.
+  - Writes an entry to `logs/health_audit.log` and returns a Markdown‑like summary.
+- Chat trigger in `fastapi_server.py`:
+  - Type: `health check` → runs diagnostics and returns formatted summary.
+
+#### Phase 10 — Autonomous Crew Simulation Sandbox
+Purpose: Deterministic, local-only multi‑round agent discussion.
+- New file: `factory_agents/archivist/simulation_core.py`
+  - `Agent` dataclass (Strategist, Engineer, Philosopher) with deterministic utterances.
+  - `AutonomousCrew.simulate_autonomous_crew(topic, rounds=3)` returns Markdown transcript and saves JSON transcript under `logs/simulations/autonomous/sim_<ts>.json`.
+  - Logs a risk entry via `reasoning_core.risk_assess("simulate", …)`.
+- Chat trigger in `fastapi_server.py`:
+  - Type: `simulate autonomous crew <topic>` → runs sandbox and returns transcript.
+
+#### Phase 11 — Self‑Governance & Risk Classification
+Purpose: Score operations and surface governance notices.
+- In `reasoning_core.py`:
+  - `risk_assess(event, details)` → Low/Medium/High heuristic; appends JSONL to `logs/risk_assessments.json`.
+  - Wrapped `think(message)` — prepends a governance banner for Medium/High risk events.
+- Chat trigger in `fastapi_server.py`:
+  - Type: `risk summary` → shows last 10 risk entries.
+
+#### Phase 12 — Ethical Drift Monitor & Persona Integrity
+Purpose: Track persona alignment with warnings on drift.
+- In `reasoning_core.py`:
+  - `compute_persona_drift(response_text)`:
+    - Baseline from `factory_agents/archivist/persona_archivist.yaml` or `.md` (fallback phrase otherwise).
+    - Preferred scoring via OpenAI embeddings (`text-embedding-3-small`) if `OPENAI_API_KEY` set; fallback to Jaccard similarity if not.
+    - Appends JSONL to `logs/persona_drift.log` with score, level (Stable/Monitor/⚠️ Drift), and SHA‑256 of content.
+  - `think(message)` wrapper warns inline if level is `⚠️ Drift`.
+- Chat trigger in `fastapi_server.py`:
+  - Type: `drift status` → shows last 5 drift entries.
+
+#### Phase 13 — Curated Knowledge Auto‑Promotion
+Purpose: Promote long, structured content to curated KB with governance artifacts.
+- In `reasoning_core.py`:
+  - `auto_promote_curated(output_text, source="chat")`:
+    - Gates: length ≥ 300 chars, drift level not `⚠️ Drift`, and `risk_score ≤ 2` (≤ Medium).
+    - Writes timestamped Markdown under `knowledge_base/curated/`.
+    - Writes a `[GENESIS REQUEST]` file under `tasks/pending/` explaining the promotion (for governance review).
+    - Appends `[PROMOTION]` line to `logs/curation_audit.log`.
+  - `think(message)` attempts auto‑promotion for long, structured replies (with `##`/`###`).
+- Chat trigger in `fastapi_server.py`:
+  - Type: `promote knowledge` → manual promotion test.
+
+---
+
+### Files added/modified (key set)
+- Added:
+  - `factory_agents/archivist/healthcheck.py`
+  - `factory_agents/archivist/simulation_core.py`
+- Modified:
+  - `factory_agents/archivist/reasoning_core.py` (Phases 8, 11, 12, 13 functions and wrappers)
+  - `factory_agents/archivist/fastapi_server.py` (triggers for Phases 8–13)
+
+No breaking changes to other modules were introduced.
+
+---
+
+### How to validate locally
+- Start Archy:
+  ```bash
+  uvicorn factory_agents.archivist.fastapi_server:app --reload --port 5065
+  ```
+- Health:
+  - Chat: `health check` → `logs/health_audit.log` updated; structured summary returned.
+- Catalog:
+  - Chat: `update registry` → `registry/agent_catalog.yaml` written and `logs/registry_audit.log` updated.
+- List/Read:
+  - Chat: `list .` and `read factory_agents/archivist/fastapi_server.py` → expect listing/snippet and audit entries in `logs/file_access_audit.log`.
+- Simulation:
+  - Chat: `simulate autonomous crew the evolution of AI governance` → Markdown transcript; JSON in `logs/simulations/autonomous/`.
+- Risk:
+  - Do a read, then a write (governed), then `risk summary` → see last 10 entries.
+- Drift:
+  - Chat a few times; then `drift status` → view last 5 entries; if embeddings disabled, fallback scores appear.
+- Curation:
+  - Trigger a long, sectioned reply (e.g., ask for a multi‑section plan) or `promote knowledge` → expect a curated file in `knowledge_base/curated/` and a `[GENESIS REQUEST]` in `tasks/pending/`, plus `logs/curation_audit.log` entry.
+
+---
+
+### Potential issues to watch
+- Embeddings for drift (Phase 12) require `OPENAI_API_KEY`; otherwise Jaccard fallback is used (less precise).
+- Risk logging currently hooks reasoning, simulation, and curation flows. If you need full coverage for file operations, we can integrate additional hooks into file access.
+- Curation versioning uses timestamps, not `_vNN.md`. If strict `_vNN` is required, we can implement a versioning helper that scans and increments.
+- The self‑indexing (Phase 8) currently extracts a simple comment/docstring; for richer auto‑documentation, we should build a curated pipeline that crawls modules and generates structured docs with provenance.
+
+---
+
+### Where to find the completion report
+- `tasks/tasks_complete/Archy-phase8-13completion`
+
+If you’d like, I can proceed to implement the recommended enhancements (Prometheus `/metrics` endpoint for Archy, `/api/archivist/stats` + dashboard panels, strict `_vNN.md` versioning, and a full auto‑doc pipeline) on a feature branch and wire them into CI/Governance Console.

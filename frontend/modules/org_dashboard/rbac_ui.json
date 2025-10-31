@@ -1,0 +1,7 @@
+{
+  "panels": [
+    "Admin",
+    "User",
+    "Auditor"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "title": "Agent Factory Central Dashboard (AFCD) — Design Blueprint",
+  "description": "Comprehensive plan for the unified Agent Factory dashboard integrating real-time monitoring, agent orchestration, governance oversight, and conversational interface with Archy. Designed for scalability, reflection, and multi-tenant use.",
+  "objectives": [
+    "Create a visually rich, real-time interactive hub for monitoring all Agent Factory operations.",
+    "Integrate live WebSocket feeds from backend services (Archy, Genesis, Governance, Knowledge, Federation).",
+    "Embed Archy as an interactive chat assistant accessible from any page.",
+    "Support movable cards and modular dashboards for future multi-company deployment.",
+    "Implement full-stack design with scalable backend and front-end technologies."
+  ],
+  "architecture": {
+    "frontend": {
+      "framework": "React + TailwindCSS + Framer Motion + Shadcn/UI + Recharts",
+      "realtime": "Socket.IO / WebSocket integration for live feeds.",
+      "deployment": "Next.js or Vite build system with Render deploy.",
+      "components": [
+        "DashboardHub.tsx (Main layout)",
+        "ChatArchy.tsx (Popup chat widget)",
+        "cards/ (Movable card components)",
+        "pages/ (Overview, Governance, Genesis, Knowledge, Admin)"
+      ]
+    },
+    "backend_integration": {
+      "services": ["Archy FastAPI Server", "Genesis API", "Knowledge Curator", "Governance Console"],
+      "feeds": {
+        "operational_logs": "/events/logs",
+        "ethical_drift": "/events/drift",
+        "genesis_builds": "/events/genesis",
+        "compliance_ledger": "/events/compliance",
+        "system_metrics": "/metrics"
+      }
+    }
+  },
+  "layout": {
+    "main_page": "The Factory Floor overview page with draggable cards for each agent subsystem.",
+    "cards": [
+      "Archy Status Feed",
+      "Genesis Engine Monitor",
+      "Knowledge Curator Overview",
+      "Toolmaker Activity Monitor",
+      "Governance & Compliance Status",
+      "Federation Feed",
+      "AutoGen Orchestration Trace",
+      "System Telemetry"
+    ],
+    "chatroom": {
+      "component": "ChatArchy.tsx",
+      "features": ["Live markdown chat", "Command shortcuts", "Voice I/O (optional)", "Persistent context"],
+      "connection": "FastAPI /chat WebSocket endpoint"
+    }
+  },
+  "future_expansion": {
+    "multi_tenant": "Company profiles and workspace accounts with JWT access control.",
+    "ai_copilot": "Archy auto-summarizes factory operations and ethical drift hourly.",
+    "timeline_replay": "Animated playback of historical agent creation and system events.",
+    "reflective_mode": "Displays Genesis learning progress and reflection metrics.",
+    "federation_analytics": "Visual map of cross-factory insight exchange and drift levels."
+  },
+  "deliverables": [
+    "frontend/dashboard/ base React app setup.",
+    "frontend/components/ChatArchy.tsx chat interface.",
+    "frontend/components/cards/* modules for all subsystems.",
+    "frontend/pages/ multi-page structure.",
+    "Socket.IO feed integrations.",
+    "Render deployment and configuration scripts."
+  ],
+  "verification": {
+    "tests": [
+      "npm run dev → start dashboard.",
+      "Verify all cards load and update in real-time.",
+      "Send test messages to Archy chatroom and confirm response.",
+      "Check WebSocket connections for all event feeds.",
+      "Confirm UI state persistence and layout drag behavior."
+    ]
+  }
+}

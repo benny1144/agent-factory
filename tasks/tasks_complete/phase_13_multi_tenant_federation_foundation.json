@@ -1,0 +1,11 @@
+{
+  "phase": 13,
+  "title": "Multi-Tenant Federation Foundation",
+  "action": "Create /orgs/<tenant_id>/ structure and tenant manifest.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Create /orgs/<tenant_id>/ structure and tenant manifest."
+  }
+}

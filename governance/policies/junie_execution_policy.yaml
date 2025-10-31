@@ -1,0 +1,22 @@
+policy_id: "JUNIE-AUTOEXEC-001"
+description: "Continuous non-interactive execution policy for Agent Factory MasterBuild (Phases 0–35)."
+enabled: true
+
+auto_approval: true
+skip_if_exists: true
+on_conflict: document_and_continue
+
+execution_mode: continuous
+halt_on_critical: true
+continue_on_minor: true
+log_output: /logs/junie_execution.jsonl
+
+human_firewall:
+  enabled: true
+  enforcement_level: post_run   # Review after completion, not before
+  reviewer: "AgentFactoryExpert"
+
+notifications:
+  on_success: false
+  on_failure: true
+  notify: ["admin@agentfactory.local"]

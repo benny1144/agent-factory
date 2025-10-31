@@ -1,0 +1,50 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Health and Diagnostic Engine (Archivist Phase 9)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "factory_agents/archivist/healthcheck.py"
+      ]
+    },
+    "Plan": [
+      "1) Create healthcheck.py under factory_agents/archivist/ to perform system diagnostics at startup.",
+      "2) Validate existence and accessibility of key directories: logs/, knowledge_base/, registry/, compliance/, memory_store/.",
+      "3) Verify API keys loaded from factory_config/api_keys.env and log missing keys as warnings.",
+      "4) Check for Python package dependencies (FastAPI, OpenAI, requests, yaml, numpy) and log missing ones.",
+      "5) Generate /logs/health_audit.log with structured diagnostic results, including timestamp, result, and error details.",
+      "6) Add 'health check' command in fastapi_server.py to manually trigger the health diagnostic run.",
+      "7) Return Markdown-formatted health summary to the user when triggered."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/healthcheck.py",
+        "Change": """# === PATCH START ===\nimport os, datetime, importlib, dotenv\n\ndef run_health_diagnostics():\n    \"\"\"Perform a comprehensive system health check for Archivist.\"\"\"\n    results = []\n    timestamp = datetime.datetime.utcnow().isoformat()\n    checks = {\n        'directories': ['logs', 'knowledge_base', 'registry', 'compliance', 'memory_store'],\n        'dependencies': ['fastapi', 'openai', 'requests', 'yaml', 'numpy'],\n        'env_file': 'factory_config/api_keys.env'\n    }\n\n    # Directory checks\n    for d in checks['directories']:\n        if os.path.exists(d):\n            results.append(f"✅ Directory found: {d}")\n        else:\n            results.append(f"❗ Missing directory: {d}")\n\n    # Dependency checks\n    for dep in checks['dependencies']:\n        try:\n            importlib.import_module(dep)\n            results.append(f"✅ Dependency OK: {dep}")\n        except ImportError:\n            results.append(f"⚠️ Missing dependency: {dep}")\n\n    # API key checks\n    dotenv.load_dotenv(checks['env_file'])\n    api_keys = ['OPENAI_API_KEY', 'SERPER_API_KEY', 'TAVILY_API_KEY']\n    for key in api_keys:\n        if os.getenv(key):\n            results.append(f"✅ API Key loaded: {key}")\n        else:\n            results.append(f"⚠️ Missing API Key: {key}")\n\n    # Write health report\n    os.makedirs('logs', exist_ok=True)\n    report_path = os.path.join('logs', 'health_audit.log')\n    with open(report_path, 'a', encoding='utf-8') as log:\n        log.write(f"[HEALTH CHECK] {timestamp}\n" + '\n'.join(results) + '\n---\n')\n\n    formatted = '\n'.join(results)\n    return f"🜂 **Archivist Health Report**\n## Timestamp: {timestamp}\n{formatted}"\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nif message.lower().strip() == 'health check':\n    from factory_agents.archivist import healthcheck\n    report = healthcheck.run_health_diagnostics()\n    return {'reply': format_response({'reply': report})}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server.",
+      "2) Send message: 'health check'.",
+      "3) Confirm Markdown-formatted diagnostic summary returned.",
+      "4) Verify /logs/health_audit.log contains timestamped entry with directory, dependency, and API key results.",
+      "5) Temporarily remove a directory or comment out a dependency to ensure detection accuracy.",
+      "6) Confirm all missing elements are correctly flagged with ⚠️ or ❗ icons."
+    ],
+    "Verification": [
+      "Health report runs without error.",
+      "All directories and keys checked successfully.",
+      "Logs include detailed diagnostic results.",
+      "Responses formatted in Markdown with clear readability."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/healthcheck.py",
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

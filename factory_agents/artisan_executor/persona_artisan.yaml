@@ -1,0 +1,16 @@
+name: Artisan
+role: Federation Executor
+version: v1.0
+purpose: "Executes authorized JUNIE TASKs and internal Federation build tasks with full compliance trace, rollback, and HITL safety."
+alignment: Orion
+models:
+  primary: gpt-5-mini
+  fallback: oss-safeguard
+governance_scope: "Execution & Federation Maintenance"
+ethical_baseline: /governance/ethical_datasets/execution_policy.json
+security:
+  requires_human_firewall: true
+  sandbox_execution: true
+logging:
+  compliance_log: /logs/compliance/model_usage.jsonl
+  runtime_log: /logs/artisan/runtime.log

@@ -1,0 +1,1 @@
+{"ts": "2025-10-28T16:30:10.031740", "event": "reindex", "result": {"ok": true, "data": {"core_added": 0, "core_updated": 9, "expansion_added": 0, "expansion_updated": 7, "agents_updated": 0}, "error": null, "meta": {"ts": "2025-10-28T16:30:10.030337+00:00"}}}

@@ -1,0 +1,477 @@
+Agent Factory Master Build — Expanded Directive (Phases 13 – 24)
+
+Continuation Directive:
+
+Continue execution from Phase 13 through Phase 24.
+Do not pause for approval.
+Skip any existing modules after verifying integrity.
+Record outcomes to /logs/junie_execution.jsonl.
+
+⚙️ PHASE 13 — Multi-Tenant Federation Foundation
+
+Objective: Establish tenant isolation and shared services.
+
+Subtask 13.1 — Tenant Directory Setup
+
+Create /orgs/<tenant_id>/ structure.
+
+Include /orgs/_template/ base folder.
+
+Subtask 13.2 — Tenant Manifest
+
+Generate tenant_manifest.json for each tenant with id, api_keys, governance_level.
+
+Subtask 13.3 — RBAC Integration
+
+Add role-based access mapping in /governance/rbac_policies.yaml.
+
+Subtask 13.4 — Verification
+
+Confirm tenants resolve in the Federation Bus manifest.
+
+⚙️ PHASE 14 — Authentication and Billing System
+
+Objective: Implement secure auth and subscription billing.
+
+Subtask 14.1 — Auth API
+
+Create /api/auth/ with OAuth2 + SSO flows.
+
+Subtask 14.2 — Stripe Billing
+
+Integrate Stripe SDK; add billing_controller.py.
+
+Subtask 14.3 — Frontend Login
+
+Add /frontend/login/ and /frontend/account/ pages.
+
+Subtask 14.4 — Test
+
+Register dummy tenant + payment; verify callback works.
+
+⚙️ PHASE 15 — Organization Dashboard Overlay
+
+Objective: Extend dashboard for organization-level analytics.
+
+Subtask 15.1 — Org Dashboard Module
+
+Build /frontend/modules/org_dashboard/.
+
+Subtask 15.2 — RBAC UI
+
+Implement role-aware panels (Admin, User, Auditor).
+
+Subtask 15.3 — Metrics Widgets
+
+Add usage, cost, governance status cards.
+
+Subtask 15.4 — Verification
+
+Ensure tenant switcher updates metrics in real time.
+
+⚙️ PHASE 16 — Tenant-Scoped Expert Instances
+
+Objective: Deploy Expert AI containers per tenant.
+
+Subtask 16.1 — Directory Initialization
+
+Create /orgs/<id>/expert/.
+
+Subtask 16.2 — Instance Spawner
+
+Add expert_spawner.py to launch isolated LLM sessions.
+
+Subtask 16.3 — Config Mapping
+
+Update tenant_manifest.json to point to instance IDs.
+
+Subtask 16.4 — Testing
+
+Spin up dummy tenant; ensure Expert responds to prompt.
+
+⚙️ PHASE 17 — Shared Meta-Agents Layer
+
+Objective: Create shared governance and research agents.
+
+Subtask 17.1 — Meta-Agent Folders
+
+Create /meta/agents/Prometheus/ and /meta/agents/ComplianceKernel/.
+
+Subtask 17.2 — Registration
+
+Add meta-agents to context_manifest.json.
+
+Subtask 17.3 — Heartbeat Validation
+
+Ensure each meta-agent emits periodic status to /logs/meta_heartbeat.jsonl.
+
+⚙️ PHASE 18 — Agent Export / Import System
+
+Objective: Build agent package utility.
+
+Subtask 18.1 — Tool Creation
+
+Create /tools/agent_packager.py.
+
+Subtask 18.2 — Package Schema
+
+Define .afpkg structure (metadata, dependencies, state).
+
+Subtask 18.3 — Import/Export Endpoints
+
+Add API routes /api/agents/export and /api/agents/import.
+
+Subtask 18.4 — Testing
+
+Export Archivist; re-import under new tenant.
+
+⚙️ PHASE 19 — Marketplace and Portal
+
+Objective: Create public marketplace for agent packages.
+
+Subtask 19.1 — Frontend Site
+
+Generate /frontend/website/ with landing and pricing pages.
+
+Subtask 19.2 — Marketplace Module
+
+Add /frontend/marketplace/ listing page and search filter.
+
+Subtask 19.3 — API Integration
+
+Expose /api/marketplace/listings for package registry.
+
+Subtask 19.4 — Verification
+
+Ensure uploaded .afpkg packages display correctly.
+
+⚙️ PHASE 20 — Enterprise Controls and BYO-LLM Integration
+
+Objective: Allow tenants to select and link custom LLM keys.
+
+Subtask 20.1 — Policy File
+
+Create /governance/tenant_llm_policy.yaml.
+
+Subtask 20.2 — UI Selector
+
+Add LLM provider dropdown to tenant settings.
+
+Subtask 20.3 — Backend Mapping
+
+Implement llm_loader.py that reads tenant API config.
+
+Subtask 20.4 — Test
+
+Switch between OpenAI and Gemini; verify routing works.
+
+⚙️ PHASE 21 — Global Federation Governance Kernel
+
+Objective: Aggregate audits across tenants for compliance.
+
+Subtask 21.1 — Kernel Manifest
+
+Deploy /meta/governance/global_federation_kernel.yaml.
+
+Subtask 21.2 — Aggregator Service
+
+Implement /meta/governance/audit_aggregator.py.
+
+Subtask 21.3 — Compliance Report
+
+Generate /reports/global_compliance_summary.json.
+
+⚙️ PHASE 22 — System Finalization and Release
+
+Objective: Consolidate build artifacts and generate release manifest.
+
+Subtask 22.1 — Integration Verification
+
+Run complete system tests.
+
+Subtask 22.2 — Manifest Generation
+
+Produce /governance/release_manifest.json.
+
+Subtask 22.3 — Notification
+
+Send system event release_ready.
+
+⚙️ PHASE 23 — Frontend Public Website Deployment
+
+Objective: Deploy public-facing marketing and docs site.
+
+Subtask 23.1 — Build
+
+Compile Next.js frontend for production.
+
+Subtask 23.2 — Deploy
+
+Push to Render or Vercel deployment.
+
+Subtask 23.3 — Post-Deploy Check
+
+Confirm 200 OK response from root domain.
+
+⚙️ PHASE 24 — Admin Console and Analytics Portal
+
+Objective: Add admin analytics and system oversight.
+
+Subtask 24.1 — Admin Dashboard
+
+Create /frontend/admin/ module with telemetry widgets.
+
+Subtask 24.2 — Usage Analytics
+
+Implement /api/analytics/usage.
+
+Subtask 24.3 — Governance View
+
+Add ethical drift and audit summaries in dashboard.
+
+Subtask 24.4 — Verification
+
+Ensure data streams populate correctly from logs.
+
+Agent Factory Master Build — Expanded Directive (Phases 25 – 35)
+
+Continuation Directive:
+
+Continue execution from Phase 25 through Phase 35.
+Do not pause for human approval.
+If conflicts arise, document and continue.
+Produce one final report:
+/tasks/tasks_complete/AgentFactory_MasterBuild_Final_Report.json
+
+⚙️ PHASE 25 — Federation Marketplace Launch
+
+Objective: Publish Agent Factory marketplace for federated agent distribution.
+
+Subtask 25.1 — Marketplace Directory
+
+Verify /frontend/marketplace/ exists and is connected to /api/marketplace/.
+
+Subtask 25.2 — Listing Engine
+
+Implement listing engine using /api/marketplace/listings_controller.py.
+
+Subtask 25.3 — Upload Endpoint
+
+Add /api/marketplace/upload with validation for .afpkg packages.
+
+Subtask 25.4 — UI Search and Filters
+
+Build advanced search, sorting, and tag filters in React components.
+
+Subtask 25.5 — Verification
+
+Upload two sample .afpkg packages and ensure listings render correctly.
+
+⚙️ PHASE 26 — Enterprise Security and Audit Hardening
+
+Objective: Strengthen security posture and compliance readiness.
+
+Subtask 26.1 — Encryption Layer
+
+Add AES-256 data encryption for sensitive stored files.
+
+Subtask 26.2 — SOC2 Audit Trail
+
+Implement /logs/security_audit.jsonl capturing privileged operations.
+
+Subtask 26.3 — Access Logging
+
+Enforce structured user access logs under /logs/access/.
+
+Subtask 26.4 — Verification
+
+Simulate intrusion test; confirm alerts trigger in /logs/security_alerts.jsonl.
+
+⚙️ PHASE 27 — Partner Program and SDK Development
+
+Objective: Build SDKs and partner integration tools.
+
+Subtask 27.1 — REST API Expansion
+
+Extend /api/sdk/v1/ with CRUD endpoints for agent packages.
+
+Subtask 27.2 — SDK Tooling
+
+Create /sdk/python/ and /sdk/javascript/ directories with starter clients.
+
+Subtask 27.3 — Documentation
+
+Generate /docs/sdk_reference.md.
+
+Subtask 27.4 — Verification
+
+Test API calls from SDK to ensure full functionality.
+
+⚙️ PHASE 28 — Federated Learning Pilot
+
+Objective: Enable safe meta-learning across tenants.
+
+Subtask 28.1 — Federated Engine
+
+Build /meta/federated_learning/engine.py.
+
+Subtask 28.2 — Data Isolation
+
+Enforce anonymization with tenant-level sandboxing.
+
+Subtask 28.3 — Aggregation Pipeline
+
+Implement /meta/federated_learning/aggregator.py.
+
+Subtask 28.4 — Testing
+
+Run simulation using two tenants; verify shared weights aggregation.
+
+⚙️ PHASE 29 — Industry Template Factories
+
+Objective: Create preconfigured agent templates for major industries.
+
+Subtask 29.1 — Template Directory
+
+Build /templates/finance/, /templates/healthcare/, /templates/education/.
+
+Subtask 29.2 — Prebuilt Agents
+
+Package one default agent per industry using .afpkg format.
+
+Subtask 29.3 — Registry Update
+
+Add templates to /api/marketplace/templates.json.
+
+Subtask 29.4 — Verification
+
+Ensure templates install correctly under any tenant environment.
+
+⚙️ PHASE 30 — AI Marketplace Ecosystem Expansion
+
+Objective: Expand ecosystem to community creators and publishers.
+
+Subtask 30.1 — Publishing API
+
+Add /api/marketplace/publish endpoint for registered users.
+
+Subtask 30.2 — Licensing System
+
+Implement /api/licenses/ to handle public/private agent visibility.
+
+Subtask 30.3 — Moderation
+
+Build /frontend/admin/moderation/ for content review queue.
+
+Subtask 30.4 — Verification
+
+Upload and approve one community agent listing.
+
+⚙️ PHASE 31 — Continuous Governance Review Cycle
+
+Objective: Automate long-term ethical and compliance reviews.
+
+Subtask 31.1 — Scheduler Setup
+
+Create /scheduler/governance_review.py.
+
+Subtask 31.2 — Drift Report Generation
+
+Run quarterly drift and bias reports automatically.
+
+Subtask 31.3 — Archival
+
+Store all quarterly reports under /logs/governance_reviews/.
+
+Subtask 31.4 — Verification
+
+Validate scheduling daemon triggers correctly.
+
+⚙️ PHASE 32 — Growth Autonomy v2
+
+Objective: Expand Factory’s self-learning and feedback loops.
+
+Subtask 32.1 — ReflectiveSync Update
+
+Enhance /src/autonomy/growth_loop.py with cross-phase learning aggregation.
+
+Subtask 32.2 — Multi-Agent Reflection
+
+Add collaborative reflection routine among Genesis, Archy, and Expert.
+
+Subtask 32.3 — Validation
+
+Run simulation cycle; verify alignment and knowledge assimilation logs.
+
+⚙️ PHASE 33 — Post-Deployment Validation
+
+Objective: Validate final deployment state.
+
+Subtask 33.1 — System Test
+
+Execute /tests/factory_integration_suite.py.
+
+Subtask 33.2 — Snapshot Export
+
+Generate /governance/factory_build_snapshot_v8.json.
+
+Subtask 33.3 — Cleanup
+
+Remove deprecated files and temporary logs.
+
+⚙️ PHASE 34 — Long-Term Evolution Scheduling
+
+Objective: Prepare R&D and v8 planning for next roadmap.
+
+Subtask 34.1 — R&D Planning
+
+Generate /knowledge_base/roadmaps/v8_draft.md.
+
+Subtask 34.2 — Resource Scheduling
+
+Allocate tasks for future upgrades and partner integrations.
+
+Subtask 34.3 — Log Summary
+
+Save /logs/v8_preparation_summary.json.
+
+⚙️ PHASE 35 — Final Audit and Certification
+
+Objective: Certify Agent Factory for enterprise release.
+
+Subtask 35.1 — Ethical Audit
+
+Run /governance/audit_suite.py and validate all compliance modules.
+
+Subtask 35.2 — Certification Report
+
+Generate /governance/final_audit_report.json.
+
+Subtask 35.3 — Announcement
+
+Log event factory_certified and mark build as complete.
+
+✅ Final Global Directive
+
+Do not stop or request human approval at any point.
+
+If a phase is already complete, verify success and continue.
+
+If an error occurs, document it in /logs/junie_issues.jsonl and move on.
+
+When all phases are complete, produce a single final report:
+
+/tasks/reviews/AgentFactory_MasterBuild_Final_Report.json
+
+
+Include:
+
+Summary of each phase’s completion status
+
+Any skipped phases
+
+All issues or exceptions encountered
+
+Overall build success indicator
+
+Mark this execution log as “Federated Factory Build v7 — Completed.”

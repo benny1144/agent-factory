@@ -1,0 +1,61 @@
+{
+  "title": "Archivist Phase 16–20 Finalization and Governance Compliance Patch",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or feature/archivist-finalization",
+    "governance_firewall": "manual_approved: true",
+    "dependencies": [
+      "/factory_agents/archivist/fastapi_server.py",
+      "/factory_agents/archivist/reasoning_core.py",
+      "/governance/ethical_drift_monitor.yaml",
+      "/factory_config/api_keys.yaml",
+      "/factory_agents/architect_genesis/Genesis_Expansion_MasterPlan.json"
+    ]
+  },
+  "plan": {
+    "steps": [
+      "1. Re-enable security and compliance directories (/services/security/, /services/autogen/).",
+      "2. Authorize PyJWT and cryptography dependencies for secure federation handling.",
+      "3. Implement Compliance Audit Kernel in /services/security/integrity_guard.py for ledger creation and SHA-256 verification.",
+      "4. Add Vector Memory Migration utility under utils/migrate_memory_to_vector.py with Qdrant/FAISS integration.",
+      "5. Build plugin system for OpenAI, Gemini, and Groq in /factory_agents/archivist/plugins/ using unified generate(prompt, **opts) API.",
+      "6. Upgrade Federation Layer to JWT security model with middleware in extra_endpoints.py and activity logging to /logs/federation_activity.jsonl.",
+      "7. Implement AutoGen Bridge in /services/autogen/bridge.py for agent orchestration and trace collection.",
+      "8. Integrate ReflectiveSync background task into FastAPI startup event within fastapi_server.py.",
+      "9. Run full pytest suite and validate ledger, drift, and federation logs.",
+      "10. Confirm all governance and compliance mechanisms active with no firewall blocks."
+    ]
+  },
+  "edits": [
+    {"path": "services/security/integrity_guard.py", "change": "Create new compliance audit kernel module for SHA-256 ledger hashing and validation."},
+    {"path": "utils/migrate_memory_to_vector.py", "change": "Create vector memory migration script with embedding validation."},
+    {"path": "factory_agents/archivist/plugins/", "change": "Add openai.py, gemini.py, and groq.py for unified LLM connectors."},
+    {"path": "services/autogen/bridge.py", "change": "Create AutoGen bridge class for task orchestration and trace logging."},
+    {"path": "factory_agents/archivist/extra_endpoints.py", "change": "Add JWT-secured federation endpoints and activity logger."},
+    {"path": "factory_agents/archivist/fastapi_server.py", "change": "Integrate ReflectiveSync startup event and mount new routers."}
+  ],
+  "tests": [
+    "pytest tests/archivist -v",
+    "python utils/migrate_memory_to_vector.py --validate",
+    "curl -X POST localhost:5065/federation/broadcast -H 'Authorization: Bearer <jwt>' -d '{\"event\":\"test\"}'",
+    "python -m services.autogen.bridge --test",
+    "curl localhost:5065/health"
+  ],
+  "verification": {
+    "success": [
+      "/governance/compliance_ledger.jsonl contains valid entries with SHA hashes.",
+      "/logs/federation_activity.jsonl logs verified JWT-authenticated events.",
+      "/logs/autogen_bridge.jsonl logs task orchestration traces.",
+      "ReflectiveSync listed as active under /health.",
+      "pytest passes all archivist tests without governance exceptions."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "Revert changes using git checkout HEAD~1 for affected files.",
+      "Remove newly created /services/security/, /services/autogen/, and /factory_agents/archivist/plugins/ directories if issues arise.",
+      "Delete logs: compliance_ledger.jsonl, federation_activity.jsonl, autogen_bridge.jsonl."
+    ]
+  },
+  "result": "Archy completes Phases 16–20 achieving full governance compliance, federation security, plugin integration, AutoGen orchestration, and ReflectiveSync activation."
+}

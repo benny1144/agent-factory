@@ -1,0 +1,11 @@
+{
+  "phase": 16,
+  "title": "Tenant-Scoped Expert Instances",
+  "action": "Deploy dedicated or shared Expert containers per tenant.",
+  "status": "pending",
+  "details": {
+    "note": "Phase scaffolding not yet implemented in this run. See docs/masterbuild/ for plan and TODOs.",
+    "source": null,
+    "action": "Deploy dedicated or shared Expert containers per tenant."
+  }
+}

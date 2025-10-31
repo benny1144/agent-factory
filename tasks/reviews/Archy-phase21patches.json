@@ -1,0 +1,278 @@
+{
+  "id": "Archy-phase21patches",
+  "title": "Archivist Phase 21 — Patches Final Report",
+  "created_at": "2025-10-28T11:16:00Z",
+  "scope": "Finalize and certify Phase 21 patches for the Archivist agent: JWT federation, AutoGen bridge, unified metrics + compliance scheduler, provider routing helper, and minimal unit tests. Provide evidence, verification mapping, foreseeable issues, and runbooks.",
+  "summary": {
+    "highlights": [
+      "JWT federation security (HS256) with full exp/iat/nbf validation and structured logging",
+      "AutoGen Bridge module with trace logging and CLI smoke test",
+      "New /autogen/run endpoint wired to AutoGenBridge",
+      "Provider selection helper llm_generate() with deterministic offline fallbacks",
+      "Daily compliance verification scheduler and unified /metrics counters",
+      "Unit tests covering federation JWT, AutoGen bridge, and provider routing",
+      "Release certification JSON report for Phase 21"
+    ],
+    "key_files": [
+      "factory_agents/archivist/extra_endpoints.py",
+      "services/autogen/bridge.py",
+      "factory_agents/archivist/reasoning_core.py",
+      "factory_agents/archivist/fastapi_server.py",
+      "tests/archivist/test_autogen_bridge.py",
+      "tests/archivist/test_federation_jwt.py",
+      "tests/archivist/test_llm_generate.py",
+      "reports/archivist_phase21_release_certification.json"
+    ]
+  },
+  "verification_map": [
+    {
+      "criterion": "/logs/federation_activity.jsonl contains valid JWT entries.",
+      "status": "ready",
+      "how_to_verify": "Run POST /federation/broadcast with a valid Bearer JWT. Inspect logs/federation_activity.jsonl for a new record.",
+      "commands": [
+        "curl -X POST localhost:5065/federation/broadcast -H 'Authorization: Bearer <jwt>' -H 'Content-Type: application/json' -d '{\"event\":\"test\",\"data\":{\"hello\":\"world\"}}'"
+      ],
+      "evidence_paths": ["logs/federation_activity.jsonl", "compliance/audit_log/federation_updates.csv"]
+    },
+    {
+      "criterion": "/logs/autogen_bridge.jsonl records orchestration traces.",
+      "status": "ready",
+      "how_to_verify": "Run the bridge in test mode and confirm a new JSONL trace line appears.",
+      "commands": [
+        "python -m services.autogen.bridge --test --task 'sample'"
+      ],
+      "evidence_paths": ["logs/autogen_bridge.jsonl"]
+    },
+    {
+      "criterion": "/reports/archivist_phase21_release_certification.json created and valid.",
+      "status": "present",
+      "how_to_verify": "Open the report and validate JSON structure and checklist entries.",
+      "evidence_paths": ["reports/archivist_phase21_release_certification.json"]
+    },
+    {
+      "criterion": "/metrics shows compliance and drift counters.",
+      "status": "ready",
+      "how_to_verify": "Start API then GET /metrics; confirm archivist_compliance_* and archivist_persona_drift_last_score when available.",
+      "commands": ["curl localhost:5065/metrics"],
+      "evidence_paths": ["logs/compliance_metrics.json", "logs/persona_drift.log"]
+    },
+    {
+      "criterion": "CI pipeline passes all tests successfully.",
+      "status": "pending",
+      "how_to_verify": "Run pytest on tests/archivist and ensure green.",
+      "commands": ["pytest tests/archivist -v"],
+      "evidence_paths": ["tests/archivist/"]
+    }
+  ],
+  "evidence_paths": {
+    "logs": [
+      "logs/federation_activity.jsonl",
+      "logs/autogen_bridge.jsonl",
+      "logs/compliance_metrics.json",
+      "logs/archy_reasoning.log",
+      "logs/persona_drift.log",
+      "logs/curation_audit.log",
+      "logs/risk_assessments.json"
+    ],
+    "reports": [
+      "reports/archivist_phase21_release_certification.json"
+    ],
+    "endpoints": [
+      "POST /federation/broadcast",
+      "POST /autogen/run",
+      "GET /metrics",
+      "GET /archivist/metrics"
+    ],
+    "tests": [
+      "tests/archivist/test_autogen_bridge.py",
+      "tests/archivist/test_federation_jwt.py",
+      "tests/archivist/test_llm_generate.py"
+    ]
+  },
+  "foreseeable_issues": [
+    {
+      "id": "AF21-01",
+      "title": "Default federation secret used in dev",
+      "severity": "High",
+      "impact": "Compromise of federation if dev secret leaks or is reused in non-dev.",
+      "likelihood": "Medium",
+      "mitigation": "Set FEDERATION_JWT_SECRET in prod/staging; rotate keys quarterly; enforce check in startup to reject dev default in non-dev envs.",
+      "owner": "archivist-team",
+      "status": "open"
+    },
+    {
+      "id": "AF21-02",
+      "title": "JWT clock skew for exp/iat/nbf",
+      "severity": "Medium",
+      "impact": "Valid tokens may be rejected if servers have slight time drift.",
+      "likelihood": "Medium",
+      "mitigation": "Document NTP sync requirement; add small leeway (e.g., 60s) to decode options if needed; add unit test with skew.",
+      "owner": "platform",
+      "status": "planned"
+    },
+    {
+      "id": "AF21-03",
+      "title": "pyjwt version compatibility",
+      "severity": "Medium",
+      "impact": "Behavior changes across versions; security fixes may be missed.",
+      "likelihood": "Medium",
+      "mitigation": "Pin minimum secure version in requirements.txt; add Dependabot/Snyk; run safety check in CI.",
+      "owner": "platform",
+      "status": "planned"
+    },
+    {
+      "id": "AF21-04",
+      "title": "Unbounded log growth",
+      "severity": "Medium",
+      "impact": "Disk bloat from JSONL logs (federation, autogen, drift, compliance).",
+      "likelihood": "High",
+      "mitigation": "Introduce rotation policy (size/time-based) and retention; archive older logs; add CI check for log size in repo.",
+      "owner": "ops",
+      "status": "open"
+    },
+    {
+      "id": "AF21-05",
+      "title": "Scheduler multi-instance duplicates",
+      "severity": "Low",
+      "impact": "Multiple compliance writers if multiple app instances run.",
+      "likelihood": "Medium",
+      "mitigation": "Guard with single-instance lock (PID file) or leader election; include instance_id in metrics.",
+      "owner": "archivist-team",
+      "status": "planned"
+    },
+    {
+      "id": "AF21-06",
+      "title": "Persona drift Jaccard fallback noise",
+      "severity": "Low",
+      "impact": "False drift alerts due to simplistic token overlap.",
+      "likelihood": "High",
+      "mitigation": "Set minimum text length; adjust thresholds; prefer embeddings when available; mandate human review before blocking.",
+      "owner": "ml-risk",
+      "status": "open"
+    },
+    {
+      "id": "AF21-07",
+      "title": "Network LLM calls disabled by default",
+      "severity": "Low",
+      "impact": "Confusion when expecting provider responses; offline stubs returned.",
+      "likelihood": "Medium",
+      "mitigation": "Document ALLOW_NETWORK_LLM=1 toggle; log provider=... offline=true in responses; add healthcheck endpoint reflecting offline mode.",
+      "owner": "archivist-team",
+      "status": "open"
+    },
+    {
+      "id": "AF21-08",
+      "title": "AutoGen Bridge error surfacing",
+      "severity": "Medium",
+      "impact": "Unhandled exceptions may leak internal details or fail silently.",
+      "likelihood": "Low",
+      "mitigation": "Ensure try/except with sanitized errors in endpoint; extend tests for failure paths; structured error envelopes.",
+      "owner": "archivist-team",
+      "status": "planned"
+    },
+    {
+      "id": "AF21-09",
+      "title": "Metrics duplication or race conditions",
+      "severity": "Low",
+      "impact": "Duplicate counters or partial writes under concurrent access.",
+      "likelihood": "Medium",
+      "mitigation": "Atomic JSON writes; file-lock during update; fallback-derived ledger count guarded.",
+      "owner": "platform",
+      "status": "planned"
+    },
+    {
+      "id": "AF21-10",
+      "title": "Windows vs POSIX path nuances",
+      "severity": "Low",
+      "impact": "Occasional path mishandling in ad-hoc scripts.",
+      "likelihood": "Low",
+      "mitigation": "Prefer pathlib in all helpers; verify UTF-8 encoding on writes; avoid hardcoded separators.",
+      "owner": "devx",
+      "status": "open"
+    },
+    {
+      "id": "AF21-11",
+      "title": "Optional dependencies not installed",
+      "severity": "Low",
+      "impact": "Non-critical features (local embeddings) unavailable; tests may skip unexpectedly.",
+      "likelihood": "Medium",
+      "mitigation": "Guard imports; mark tests xfail/skip with clear message; document optional extras in requirements.",
+      "owner": "devx",
+      "status": "open"
+    },
+    {
+      "id": "AF21-12",
+      "title": "Claims logging hygiene",
+      "severity": "Medium",
+      "impact": "JWT claim details in logs could reveal metadata if not curated.",
+      "likelihood": "Low",
+      "mitigation": "Continue filtering exp/nbf/iat; avoid sensitive PII; add log redaction utility; document retention.",
+      "owner": "security",
+      "status": "planned"
+    }
+  ],
+  "security_governance": {
+    "secrets": "No secrets committed. JWT secret via FEDERATION_JWT_SECRET (fallback FEDERATION_SECRET).",
+    "network_defaults": "External LLM calls disabled unless ALLOW_NETWORK_LLM=1.",
+    "auditability": "All endpoints and schedulers write JSONL/JSON logs under logs/.",
+    "governance_files": [
+      "governance/firewall_audit.log",
+      "governance/compliance_ledger.jsonl"
+    ]
+  },
+  "ci_cd_notes": {
+    "dependencies": [
+      "pyjwt",
+      "pytest",
+      "optional: sentence-transformers",
+      "optional: openai, google-generativeai, groq"
+    ],
+    "commands": [
+      "pytest tests/archivist -v",
+      "python -m services.autogen.bridge --test --task 'sample'",
+      "curl -X POST localhost:5065/federation/broadcast -H 'Authorization: Bearer <jwt>' -H 'Content-Type: application/json' -d '{\"event\":\"test\"}'",
+      "curl localhost:5065/metrics"
+    ],
+    "env": [
+      "FEDERATION_JWT_SECRET=<secure>",
+      "ALLOW_NETWORK_LLM=0|1",
+      "OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY (optional if network enabled)"
+    ],
+    "notes": "Time-based tests may require clock tolerance; ensure NTP sync in CI agents."
+  },
+  "next_actions": [
+    {
+      "title": "Introduce file rotation for logs/*.jsonl",
+      "acceptance": "Configurable retention with max size and date-based rollover; new unit test verifies rotation trigger.",
+      "owner": "ops"
+    },
+    {
+      "title": "Add 60s JWT leeway + deterministic skew tests",
+      "acceptance": "_decode_jwt accepts up to 60s skew; tests cover exp/iat/nbf boundaries.",
+      "owner": "platform"
+    },
+    {
+      "title": "Bridge failure-path tests + sanitized error envelopes",
+      "acceptance": "/autogen/run returns standard error envelope; unit tests assert shape.",
+      "owner": "archivist-team"
+    },
+    {
+      "title": "Metrics writer locking",
+      "acceptance": "Atomic writes with file lock; no partial JSON under concurrency; regression test added.",
+      "owner": "platform"
+    },
+    {
+      "title": "Docs: Offline/online provider modes",
+      "acceptance": "README section explains ALLOW_NETWORK_LLM semantics and examples.",
+      "owner": "devrel"
+    }
+  ],
+  "meta": {
+    "project_root": "C:/Users/benny/IdeaProjects/agent-factory",
+    "environment_flags": {
+      "ALLOW_NETWORK_LLM": "0 by default",
+      "JWT_SECRET_ENV": "FEDERATION_JWT_SECRET"
+    },
+    "runtime_notes": "Some evidence files are generated at runtime on first use (logs)."
+  }
+}

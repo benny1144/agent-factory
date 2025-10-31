@@ -1,0 +1,20 @@
+# Agent Factory — Agents Registry (append-only)
+# Records known agents with governance classifications.
+
+agents:
+  - name: Archivist
+    type: Curator
+    level: L3
+    privileges: [read, write_curated]
+    firewall_scope: limited
+    entrypoint: factory_agents/archivist/main.py
+    api: factory_agents/archivist/curator_api.py
+    persona: factory_agents/archivist/persona_archivist.md
+  - name: Genesis
+    type: Architect
+    level: L3
+    privileges: [read, plan, generate]
+    firewall_scope: managed
+    entrypoint: factory_agents/architect_genesis/main.py
+    api: null
+    persona: personas/genesis_charter_agent.md

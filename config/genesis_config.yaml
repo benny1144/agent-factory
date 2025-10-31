@@ -1,0 +1,14 @@
+# Genesis Expansion Runtime Configuration
+# Safe defaults; no network or secrets required.
+
+reflection:
+  enabled: true
+  interval_s: 60  # heartbeat interval for reflective_core daemon
+
+# Future knobs (reserved)
+# designer:
+#   strategy: "deterministic"
+# crew_builder:
+#   max_members: 3
+# mission_runner:
+#   mode: "dry_run"

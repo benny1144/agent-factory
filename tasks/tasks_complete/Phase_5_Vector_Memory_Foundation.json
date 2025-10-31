@@ -1,0 +1,45 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Vector Memory Foundation (Archivist Phase 5)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "factory_config/api_keys.env"
+      ]
+    },
+    "Plan": [
+      "1) Integrate Chroma or Qdrant as the semantic vector store for long-term memory management.",
+      "2) Add helper functions: embed_text(), store_embedding(), and query_memory() to reasoning_core.py.",
+      "3) Store embeddings under /knowledge_base/vector_store/ with UUID-based filenames.",
+      "4) Enable query_memory() to perform semantic similarity search on stored conversations and knowledge entries.",
+      "5) Validate embedding consistency and retrieval accuracy using test strings and mock queries.",
+      "6) Log all memory write and query events to /logs/memory_audit.log for governance traceability."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/reasoning_core.py",
+        "Change": """# === PATCH START ===\nimport uuid, json\nfrom openai import OpenAI\n\ndef embed_text(text: str):\n    \"\"\"Generate embedding vector using OpenAI Embeddings API.\"\"\"\n    try:\n        client = OpenAI()\n        response = client.embeddings.create(model='text-embedding-3-small', input=text)\n        return response.data[0].embedding\n    except Exception as e:\n        return f'❗ Embedding failed: {e}'\n\n\ndef store_embedding(text: str, metadata: dict = None):\n    \"\"\"Store text embedding in /knowledge_base/vector_store/ for long-term recall.\"\"\"\n    vector = embed_text(text)\n    entry = {\n        'id': str(uuid.uuid4()),\n        'text': text,\n        'embedding': vector,\n        'metadata': metadata or {}\n    }\n    path = os.path.join('knowledge_base', 'vector_store', f"{entry['id']}.json")\n    with open(path, 'w') as f:\n        json.dump(entry, f)\n    with open(os.path.join('logs', 'memory_audit.log'), 'a') as log:\n        log.write(f"[STORE] {entry['id']} {metadata}\n")\n    return entry['id']\n\n\ndef query_memory(query: str, top_k: int = 3):\n    \"\"\"Perform semantic similarity search using cosine similarity against stored embeddings.\"\"\"\n    import numpy as np, glob\n    from numpy.linalg import norm\n\n    def cosine_sim(a, b):\n        return np.dot(a, b) / (norm(a) * norm(b))\n\n    q_vec = embed_text(query)\n    results = []\n    for file in glob.glob(os.path.join('knowledge_base', 'vector_store', '*.json')):\n        with open(file, 'r') as f:\n            data = json.load(f)\n            if 'embedding' in data:\n                score = cosine_sim(np.array(q_vec), np.array(data['embedding']))\n                results.append((score, data['text']))\n    results.sort(reverse=True, key=lambda x: x[0])\n    with open(os.path.join('logs', 'memory_audit.log'), 'a') as log:\n        log.write(f"[QUERY] {query} -> top {top_k}\n")\n    formatted = '\n'.join([f"- ({round(s,3)}) {t[:150]}..." for s, t in results[:top_k]])\n    return f"🜂 **Archy Memory Recall**\n## Top {top_k} relevant matches:\n{formatted}"\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart FastAPI server.",
+      "2) Execute: store_embedding('Agent Factory is a modular AI architecture.', {'source':'manual test'}).",
+      "3) Run: query_memory('What is Agent Factory?').",
+      "4) Confirm 1–3 results returned in Markdown format.",
+      "5) Verify /knowledge_base/vector_store/ contains new JSON entries.",
+      "6) Check /logs/memory_audit.log for STORE and QUERY entries."
+    ],
+    "Verification": [
+      "Embeddings successfully created and stored as JSON.",
+      "Semantic retrieval returns top matches correctly ranked.",
+      "Audit log entries created for store and query operations.",
+      "No exceptions for missing directories or API failures."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/reasoning_core.py",
+      "Remove all *.json under /knowledge_base/vector_store/ if invalid embeddings created."
+    ]
+  }
+}

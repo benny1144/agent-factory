@@ -1,0 +1,12 @@
+{
+  "version": "v7.5",
+  "status": "active",
+  "agents": [
+    { "name": "Orion", "role": "Meta-Orchestrator", "path": "core/orion_bootstrap.py" },
+    { "name": "Artisan", "role": "Implementation Engine", "path": "factory_agents/artisan_executor/main.py" },
+    { "name": "Archy", "role": "Sentinel", "path": "factory_agents/archy.py" },
+    { "name": "Genesis", "role": "Evolver", "path": "factory_agents/genesis.py" },
+    { "name": "Watchtower", "role": "Human-AI Interface", "path": "frontend/watchtower/" }
+  ],
+  "activation_date": "2025-11-01T00:00:00Z"
+}

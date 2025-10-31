@@ -1,0 +1,30 @@
+{
+  "ts": "2025-10-29T06:58:42.850623+00:00",
+  "agents": [
+    {
+      "name": "architect_genesis",
+      "path": "factory_agents\\architect_genesis\\main.py"
+    },
+    {
+      "name": "archivist",
+      "path": "factory_agents\\archivist_archy\\main.py"
+    },
+    {
+      "name": "juno_implementation",
+      "path": "factory_agents\\juno_implementation\\main.py"
+    },
+    {
+      "name": "forgewright",
+      "path": "factory_agents\\forgewright\\main.py"
+    },
+    {
+      "name": "librarius",
+      "path": "factory_agents\\librarius\\curate.py"
+    },
+    "Prometheus",
+    "ComplianceKernel"
+  ],
+  "tenants": [
+    "demo_tenant"
+  ]
+}

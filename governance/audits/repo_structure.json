@@ -1,0 +1,53 @@
+{
+  "architect_genesis": {
+    "missing": [
+      "main.py",
+      "requirements.txt"
+    ],
+    "status": "incomplete"
+  },
+  "archivist": {
+    "missing": [
+      "main.py",
+      "requirements.txt"
+    ],
+    "status": "incomplete"
+  },
+  "archivist_archy": {
+    "missing": [
+      "main.py",
+      "requirements.txt"
+    ],
+    "status": "incomplete"
+  },
+  "artisan_executor": {
+    "missing": [
+      "main.py",
+      "requirements.txt"
+    ],
+    "status": "incomplete"
+  },
+  "artisan_implementation": {
+    "missing": [
+      "requirements.txt"
+    ],
+    "status": "incomplete"
+  },
+  "forgewright": {
+    "missing": [],
+    "status": "ok"
+  },
+  "librarius": {
+    "missing": [
+      "main.py"
+    ],
+    "status": "incomplete"
+  },
+  "orion": {
+    "missing": [
+      "main.py",
+      "requirements.txt"
+    ],
+    "status": "incomplete"
+  }
+}

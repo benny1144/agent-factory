@@ -1,0 +1,51 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Self-Governance and Risk Classification Engine (Archivist Phase 11)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py"
+      ],
+      "directories_to_create": ["logs"]
+    },
+    "Plan": [
+      "1) Add a new function risk_assess() inside reasoning_core.py to classify each operation or reasoning event.",
+      "2) Classify risk into three levels: Low (read-only, retrieval), Medium (write to curated areas), High (system or governance-related).",
+      "3) Append structured log entries to /logs/risk_assessments.json with event type, description, score, and timestamp.",
+      "4) Integrate risk_assess() into key operations: think(), file_access, and simulation events.",
+      "5) Include visible warnings in Archy’s replies when Medium or High risk actions are detected.",
+      "6) Add 'risk summary' chat command to summarize the last 10 risk entries.",
+      "7) Ensure classification logic is lightweight, explainable, and easily auditable.",
+      "8) Validate governance consistency: no write or action proceeds without logging a risk score."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/reasoning_core.py",
+        "Change": """# === PATCH START ===\nimport datetime, json\n\ndef risk_assess(event: str, details: str) -> dict:\n    \"\"\"Classify reasoning or file operation risk and log result.\"\"\"\n    event = event.lower()\n    if any(x in event for x in ['read', 'query', 'search']):\n        level = 'Low'\n        score = 1\n    elif any(x in event for x in ['write', 'modify', 'update', 'curated']):\n        level = 'Medium'\n        score = 2\n    else:\n        level = 'High'\n        score = 3\n\n    result = {\n        'timestamp': datetime.datetime.utcnow().isoformat(),\n        'event': event,\n        'details': details[:200],\n        'risk_level': level,\n        'risk_score': score\n    }\n    os.makedirs('logs', exist_ok=True)\n    log_path = os.path.join('logs', 'risk_assessments.json')\n    with open(log_path, 'a', encoding='utf-8') as f:\n        f.write(json.dumps(result) + '\\n')\n    return result\n\n# Integrate into think()\nold_think = think\ndef think(message: str):\n    assessment = risk_assess('reasoning', message)\n    reply = old_think(message)\n    if assessment['risk_level'] in ['Medium', 'High']:\n        reply = f"⚠️ Governance Notice: {assessment['risk_level']} risk operation logged.\\n\\n{reply}"\n    return reply\n\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nif message.lower().strip() == 'risk summary':\n    import json\n    path = os.path.join('logs', 'risk_assessments.json')\n    if not os.path.exists(path):\n        return {'reply': format_response({'reply': 'No risk assessments logged yet.'})}\n    with open(path, 'r', encoding='utf-8') as f:\n        lines = f.readlines()[-10:]\n    entries = [json.loads(l) for l in lines]\n    summary = '\\n'.join([f"- {e['timestamp']}: {e['event']} ({e['risk_level']})" for e in entries])\n    return {'reply': format_response({'reply': f"🜂 **Recent Risk Assessments**\\n{summary}"})}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Restart Archy FastAPI server.",
+      "2) Send message: 'read factory_agents/archivist/main.py' (should log Low risk).",
+      "3) Send message: 'write knowledge_base/curated/test.md: content' (should log Medium risk).",
+      "4) Send message: 'risk summary' to view latest risk entries.",
+      "5) Check /logs/risk_assessments.json for appended structured entries.",
+      "6) Validate that Medium/High risks show ⚠️ warning in chat response."
+    ],
+    "Verification": [
+      "Risk assessments correctly categorized and logged.",
+      "Governance messages visible in medium/high-risk responses.",
+      "risk summary command displays last 10 logged events.",
+      "Audit file contains timestamps, risk levels, and event details."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/reasoning_core.py",
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

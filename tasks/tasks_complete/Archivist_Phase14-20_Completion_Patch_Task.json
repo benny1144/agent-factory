@@ -1,0 +1,58 @@
+{
+  "title": "Archivist Phase 14–20 Completion Patch Task",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or feature/archivist-enhancements",
+    "dependencies": [
+      "/factory_agents/archivist/fastapi_server.py",
+      "/factory_agents/archivist/reasoning_core.py",
+      "/factory_agents/archivist/file_access.py",
+      "/factory_agents/archivist/healthcheck.py",
+      "/factory_config/api_keys.yaml",
+      "/governance/ethical_drift_monitor.yaml"
+    ]
+  },
+  "plan": {
+    "steps": [
+      "1. Hook ReflectiveSync background task into FastAPI app lifespan events for continuous registry updates.",
+      "2. Implement Compliance Audit Kernel in /services/security/integrity_guard.py with SHA-256 ledger creation and 24h validation cycle.",
+      "3. Add /governance/approve endpoint and /dashboard template for Human Firewall approvals.",
+      "4. Create utils/migrate_memory_to_vector.py for JSONL to FAISS/Qdrant migration with similarity validation.",
+      "5. Build factory_agents/archivist/plugins/ folder with openai.py, gemini.py, and groq.py connectors exposing unified generate(prompt, **opts) interface.",
+      "6. Extend fastapi_server.py with /federation/broadcast and /subscribe endpoints secured by JWT validation.",
+      "7. Implement services/autogen/bridge.py with AutoGenBridge class (register_agent, run_autogen_task, collect_trace).",
+      "8. Add health and metrics enrichment to /health endpoint to include ReflectiveSync and Compliance Kernel status."
+    ]
+  },
+  "edits": [
+    {"path": "factory_agents/archivist/fastapi_server.py", "change": "Add ReflectiveSync scheduler, /approve, /dashboard, /federation endpoints, and metrics reporting."},
+    {"path": "services/security/integrity_guard.py", "change": "New module for compliance ledger and SHA-256 verification."},
+    {"path": "utils/migrate_memory_to_vector.py", "change": "New migration utility script for FAISS/Qdrant transition."},
+    {"path": "factory_agents/archivist/plugins/", "change": "Create openai.py, gemini.py, groq.py with unified API schema."},
+    {"path": "services/autogen/bridge.py", "change": "Create MAF integration bridge class for agent orchestration."}
+  ],
+  "tests": [
+    "pytest tests/archivist -v",
+    "curl localhost:5065/health",
+    "curl -X POST localhost:5065/governance/review -d '{\"event\":\"compliance_check\"}'",
+    "curl -X POST localhost:5065/federation/broadcast -d '{\"update\":\"drift_metrics\"}'",
+    "python utils/migrate_memory_to_vector.py --validate"
+  ],
+  "verification": {
+    "success": [
+      "/logs/persona_drift.log updates successfully.",
+      "/governance/compliance_ledger.jsonl contains hash entries.",
+      "/templates/dashboard.html accessible via /dashboard.",
+      "/factory_agents/archivist/plugins/ operational.",
+      "/federation endpoints respond with valid JWT handshake.",
+      "AutoGenBridge executes run_autogen_task without error."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "Revert affected files using git checkout HEAD~1.",
+      "Remove newly created services and plugins directories if errors occur.",
+      "Delete compliance ledger and revert to pre-patch state." ]
+  },
+  "result": "Archivist fully completes Phases 14–20, including compliance kernel, federation integration, vector migration, and AutoGen bridge readiness."
+}

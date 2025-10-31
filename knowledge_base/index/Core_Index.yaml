@@ -1,0 +1,59 @@
+version: '1.0'
+generated_by: utils/knowledge_indexer.py
+last_updated: '2025-10-28T16:30:10.012046+00:00'
+items:
+- title: 1. Implementation Plan
+  path: knowledge_base/core/1. Implementation Plan.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:09.997231+00:00'
+  indexed: true
+  sha256: ef78344abfa85cf5760720d23600721ce087537c4fbf1b889760a295ba342e76
+- title: 2. The Complete Agent Persona Protocol
+  path: knowledge_base/core/2. The Complete Agent Persona Protocol.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:09.998600+00:00'
+  indexed: true
+  sha256: f05c6ed1652119f053e583e4d7b615e40fb7f1855188981b239beee1df8823ce
+- title: 3. Agentic Blueprints & Case Studies
+  path: knowledge_base/core/3. Agentic Blueprints & Case Studies.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:09.999782+00:00'
+  indexed: true
+  sha256: c2d3bc5b7bba9cd6f1bc15f70c3bb3bb33c081cbd16bf6c456b843c18c9f6e02
+- title: 4. AI Agent Communication Protocols Explained
+  path: knowledge_base/core/4. AI Agent Communication Protocols Explained.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:10.000956+00:00'
+  indexed: true
+  sha256: 17f81feca9283281da09d6363196fd237ee7c3c4c002536010480b1e0513ce65
+- title: 5. AI Agent Human Firewall Protocol
+  path: knowledge_base/core/5. AI Agent Human Firewall Protocol.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:10.004091+00:00'
+  indexed: true
+  sha256: 527bb80ee974294bcfcb05c9e5ac371e36c0ac4334692301ba5c75c9120fff53
+- title: 6. Agent Tooling  Research & Specification
+  path: knowledge_base/core/6. Agent Tooling_ Research & Specification.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:10.006402+00:00'
+  indexed: true
+  sha256: 93887c023bbffb4dd06437767cd94a3c461da20f444c2e9d7a080225575a6d1c
+- title: 7. CrewAI Handbook
+  path: knowledge_base/core/7. CrewAI Handbook.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:10.007613+00:00'
+  indexed: true
+  sha256: b326370daac1e6bafadd7cdc6feb499208df3004142e71a2f7396a9c451cbba4
+- title: 8. AutoGen Framework Research Report
+  path: knowledge_base/core/8. AutoGen Framework Research Report.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:10.009241+00:00'
+  indexed: true
+  sha256: 4675bb59eeeca58f3de382fbb1cba875761ee2e97d6ce1bab73f28fcad073296
+- title: Agent Factory Roadmap v6 — The Grand Unified Blueprint for Generative Intelligence
+  path: knowledge_base/core/Agent Factory Roadmap v6 — The Grand Unified Blueprint
+    for Generative Intelligence.pdf
+  version: v1
+  last_updated: '2025-10-28T16:30:10.010853+00:00'
+  indexed: true
+  sha256: c419d69ddc6b75d8007bf65cd7283b5f71eefa80d9e013c3162396a8d8ac9df5

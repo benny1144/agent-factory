@@ -1,0 +1,8 @@
+{
+  "id": "demo_tenant",
+  "api_keys": {},
+  "governance_level": "standard",
+  "experts": [
+    "expert-demo_tenant-001"
+  ]
+}

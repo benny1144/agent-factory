@@ -1,0 +1,178 @@
+### Final report — Phases 14–20 executed (with corrective patches applied)
+
+Below is a comprehensive, step‑by‑step report of what I implemented for Archivist Phases 14–20, how to validate it locally, what remains to fully align with the extended spec, and concrete recommendations for the Architect. All changes were made to be governance‑safe, append‑only for logs/ledgers, and resilient to missing optional dependencies.
+
+---
+
+### Summary of work completed (by phase)
+
+#### Phase 14 — Reflective Sync & Auto‑Index Update
+- Implemented a background ReflectiveSync service to auto‑rebuild the AST‑enriched agent catalog every 30 minutes and retain a snapshot history:
+  - File: `factory_agents/archivist/reasoning_core.py`
+    - Class `ReflectiveSync` with:
+      - Snapshot retention in `registry/history/` (keeps latest 10, older pruned).
+      - Aggregated metrics: runs, successes, total/avg duration, last error.
+    - Helpers:
+      - `start_reflective_sync()` safely starts the async loop (idempotent best‑effort).
+      - `get_reflective_metrics()` returns a dict suitable for Prometheus exposition.
+  - Mounted the service at app startup:
+    - File: `factory_agents/archivist/fastapi_server.py`
+      - Startup hook calls `start_reflective_sync()`.
+  - Exposed a text metrics endpoint for quick scraping:
+    - File: `factory_agents/archivist/extra_endpoints.py` → `GET /archivist/metrics` calls `get_reflective_metrics()` and emits Prometheus‑style lines.
+
+Validation
+- Start Archivist API and wait >30 minutes (or temporarily reduce interval to test) → catalog updates and `registry/history/agent_catalog_<ts>.yaml` accumulate (retaining 10 latest). `GET /archivist/metrics` shows counters increasing.
+
+Notes
+- The ReflectiveSync loop only starts once per process via startup hook. If multiple workers/replicas are used in production, run the loop on a single instance or add a small leader‑election scheme.
+
+
+#### Phase 12 add‑ons used by Phase 14 — Unified API keys + hardened drift pipeline
+- File: `factory_agents/archivist/reasoning_core.py`
+  - `load_api_keys()` now reads env + `factory_config/api_keys.yaml` with boolean detection only (no key values logged), writing to `logs/keys_detection.log`.
+  - `compute_persona_drift()` backend selection order:
+    - OpenAI embeddings (if key present) → local `sentence-transformers` model (`all-MiniLM-L6-v2`) if installed → Jaccard fallback (no external deps).
+  - Continues to write JSONL drift records to `logs/persona_drift.log`.
+
+Validation
+- Use `drift status` in chat or call `compute_persona_drift()` programmatically; inspect `logs/persona_drift.log`.
+
+
+#### Phase 8 enhancement leveraged by Phase 14 — AST-enriched catalog
+- File: `factory_agents/archivist/reasoning_core.py`
+  - `build_agent_catalog()` parses Python files with `ast` and includes `functions`, `classes`, `imports` arrays per file in `registry/agent_catalog.yaml`.
+
+Validation
+- In chat: `update registry` → inspect `registry/agent_catalog.yaml` and `registry/history` snapshots.
+
+
+#### Phase 11 coverage — Risk hooks for file ops and diagnostics
+- File: `factory_agents/archivist/file_access.py` → `_audit()` now calls `risk_assess()` to append Low/Medium/High events into `logs/risk_assessments.json` (file READ/LIST = Low, WRITE = Medium by default).
+- File: `factory_agents/archivist/healthcheck.py` → logs a Low `diagnostics` risk event after health report write.
+
+Validation
+- Perform list/read/write and run `health check` in chat → check `logs/risk_assessments.json` for recent events.
+
+
+#### Phase 13 enhancement — Versioned curation filenames
+- File: `utils/versioning_helper.py` → `get_next_version(path_prefix)` returns `*_vNN.md`.
+- File: `factory_agents/archivist/reasoning_core.py` → `auto_promote_curated()` now prefers `_vNN.md` for curated outputs (falls back to timestamps if helper not available).
+
+Validation
+- Trigger a long, structured reply or use `promote knowledge` in chat → new `knowledge_base/curated/curated_entry_vNN.md` created and a GENESIS REQUEST note saved in `tasks/pending/`.
+
+
+#### Phase 15/19 seeds — Governance dashboard, approvals, federation stubs, metrics endpoint
+- File: `factory_agents/archivist/extra_endpoints.py` (router is mounted in `fastapi_server.py`):
+  - `POST /governance/approve` appends a JSON line to `governance/firewall_audit.log`.
+  - `GET /dashboard` shows last 50 lines from the firewall audit in a minimal inline HTML table (no Jinja dependency).
+  - `POST /federation/subscribe` & `POST /federation/broadcast` with shared‑secret HMAC validation (stub) appending CSV to `compliance/audit_log/federation_updates.csv` and subscriptions to `governance/federation_subscribers.txt`.
+  - `GET /archivist/metrics` exposes ReflectiveSync counters.
+
+Validation
+- `POST /governance/review` (already present) and `POST /governance/approve` then open `GET /dashboard` → recent events visible.
+- `POST /federation/subscribe` & `POST /federation/broadcast` with a valid HMAC signature (payload+secret) → accepted and audited to CSV.
+
+
+#### CI & Tests (Archivist scope)
+- File: `.github/workflows/ci.yml` → light CI lane runs `pytest tests/archivist -v` on push/PR.
+- Tests added:
+  - `tests/archivist/test_drift.py`: basic drift result shape and score bounds.
+  - `tests/archivist/test_risk.py`: risk JSONL append and `POST /governance/review` logging.
+  - `tests/archivist/test_curation.py`: versioning helper increments `_vNN.md` correctly.
+
+Validation
+- Run `pytest tests/archivist -v` locally or push branch to trigger CI.
+
+
+#### Operations — Cloudflare Tunnel watchdog (hardening)
+- File: `scripts/watchdog_cloudflare_tunnel.ps1` monitors local Junie Bridge and the `cloudflared` tunnel; optional `-InstallTask` flag registers a scheduled task that runs every 2 minutes; logs to `logs/tunnel_watchdog.log`.
+
+Validation
+- Kill `cloudflared.exe` and wait ≤ 2 minutes → watchdog restarts it, confirming in the log.
+
+---
+
+### Items still pending to fully satisfy the attached Phase 14–20 patch plan
+1) **Compliance Audit Kernel (Phase 16)**
+   - New module implemented: `services/security/integrity_guard.py` with `sha256_file()`, `append_ledger_entry()`, `verify_ledger()` and JSONL ledger at `governance/compliance_ledger.jsonl`.
+   - Next: add a daily scheduler (Windows Task or async loop) and surface a summary to `/dashboard` or `/archivist/metrics`.
+
+2) **Vector memory migration utility (Phase 17)**
+   - Pending: `utils/migrate_memory_to_vector.py` to migrate JSONL → MemoryEngine backend with sample cosine validation and a migration report `[AUDIT]` line.
+
+3) **External LLM plugins (Phase 18)**
+   - Pending: `factory_agents/archivist/plugins/{openai.py, gemini.py, groq.py}` with `generate()` returning a normalized schema, and a provider selector in `reasoning_core.py`.
+
+4) **Federation security hardening (Phase 19)**
+   - Current: HMAC stub implemented. 
+   - Pending: switch to JWT (exp/iat/nbf) validation with `pyjwt` and a rotated secret via env/YAML; continue CSV audit with clear accepted/rejected reasons.
+
+5) **AutoGen bridge (Phase 20)**
+   - Pending: `services/autogen/bridge.py` implementing `AutoGenBridge` and an `/autogen/run` endpoint + minimal tests.
+
+6) **Metrics exporter integration**
+   - Current: `GET /archivist/metrics` exposes ReflectiveSync counters.
+   - Pending: include these counters in the main Prometheus exporter under `/metrics` if you want a single scrape point.
+
+---
+
+### Issues found and recommendations for the Architect
+- **Optional `sentence-transformers` dependency**
+  - Keep it optional; CI can skip it (Jaccard fallback used). If local embeddings are desired in CI, add to `requirements.txt` or a test extras group.
+
+- **Router wiring and startup**
+  - Done: mounted `extra_endpoints.router` and added a startup hook to call `start_reflective_sync()` in `fastapi_server.py`.
+
+- **Compliance ledger design**
+  - Use append‑only JSONL with `{entry_id, file_path, sha256, size, timestamp, status}`. Maintain `governance/backup/` snapshots after verify runs for easy rollback.
+
+- **Federation security**
+  - Move from HMAC to JWT for replay protection and issuer/expiry validation; log accepted and rejected attempts with reasons (compliance friendly).
+
+- **AutoGen bridge**
+  - Keep deterministic for CI; gate outbound calls behind config. Expose `bridge.run_autogen_task()` traces in `/metrics` or `/dashboard` for governance visibility.
+
+- **Cloudflare scripts**
+  - The original setup script had a static check warning; the cleaned version compiles. The watchdog is safe to schedule and fully local.
+
+- **Production startup**
+  - Ensure only one instance runs ReflectiveSync when running multiple workers/replicas (candidate: leader election or single instance assignment).
+
+---
+
+### How to validate (quick checklist)
+- Startup and health
+  - `uvicorn factory_agents.archivist.fastapi_server:app --reload --port 5065`
+  - `GET /health` → `{"ok": true}`
+  - `GET /dashboard` → shows recent firewall audit entries
+  - `GET /archivist/metrics` → shows ReflectiveSync counters
+
+- Catalog
+  - Chat: `update registry` → inspect `registry/agent_catalog.yaml` and `registry/history/`
+
+- Drift & risk
+  - Chat a few turns + `drift status` → see entries in `logs/persona_drift.log`
+  - Perform `list/read/write` and `health check` → see `logs/risk_assessments.json`
+
+- Federation
+  - `POST /federation/subscribe` and `POST /federation/broadcast` with a valid HMAC → `compliance/audit_log/federation_updates.csv` updated
+
+- Curation
+  - Chat a long structured answer or `promote knowledge` → `_vNN.md` under `knowledge_base/curated/` + `tasks/pending/genesis_request_<ts>.txt`
+
+- Compliance
+  - `python -m services.security.integrity_guard` → writes a verify summary to `governance/firewall_audit.log` and backups ledger
+
+- CI/tests
+  - `pytest tests/archivist -v` or push to run `.github/workflows/ci.yml`
+
+---
+
+### Next actions (low‑risk implementation path)
+1) Add a daily scheduler (Windows Task or async loop) for `verify_ledger()` and publish ReflectiveSync counters under `/metrics`.
+2) Implement `utils/migrate_memory_to_vector.py` (stub/local ok) and add a migration report test.
+3) Create plugin stubs for LLMs and a selector that normalizes outputs; unit test the path selection based on unified key detection.
+4) Harden federation endpoints with JWT and add tests.
+5) Implement the AutoGen bridge stub + `/autogen/run` endpoint and tests.

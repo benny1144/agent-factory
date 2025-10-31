@@ -1,0 +1,121 @@
+{
+  "title": "Architect Genesis Expansion Master Plan — Autonomous Agent Factory Architect",
+  "version": "v1.0",
+  "description": "This comprehensive plan defines the next evolution of Architect Genesis — transforming it from a static orchestrator into a fully autonomous, self-improving agent creation and orchestration system. It integrates learning, reflection, and governance alignment from all project documents: Implementation Plan v1, Agent Factory Roadmap v6, Ethical Drift Protocol, and AI Communication & Governance frameworks.",
+  "core_mission": "Architect Genesis will autonomously design, build, validate, and deploy agents and multi-agent crews — learning from each creation, refining its blueprints, and synchronizing insights into the global knowledge base.",
+
+  "objectives": [
+    "Establish Genesis as a self-sufficient system architect capable of generating agents with minimal human input.",
+    "Integrate dynamic learning loops that improve blueprint generation accuracy and efficiency over time.",
+    "Ensure all agent designs comply with governance, ethical drift, and firewall review processes.",
+    "Enable cross-agent collaboration and crew formation with persistent memory and procedural feedback.",
+    "Provide auditability, transparency, and reversibility for every Genesis operation."
+  ],
+
+  "phases": {
+    "Phase 1 — Foundation Upgrade": {
+      "tasks": [
+        "Refactor main.py to modular structure: loader, dispatcher, crew manager, reflective core.",
+        "Create /services/genesis/ directories: agent_designer.py, crew_builder.py, mission_runner.py, and reflective_core.py.",
+        "Integrate /factory_config/api_keys.yaml + /api_keys.env handling for model flexibility (GPT-5, Gemini, Groq).",
+        "Ensure Genesis logs to /logs/genesis_orchestration.jsonl with structured event schema."
+      ]
+    },
+
+    "Phase 2 — Agent Designer & Blueprint Intelligence": {
+      "tasks": [
+        "Implement AgentDesigner class with functions: analyze_mission(), generate_blueprint(), validate_compliance().",
+        "Incorporate NLP-based mission parsing (extract goals, capabilities, tools, dataset needs).",
+        "Store blueprints under /registry/blueprints/ as JSONL.",
+        "Apply ethical drift scoring on generated blueprints before activation."
+      ],
+      "learning": "AgentDesigner will record blueprint performance and reinforcement metrics into /knowledge_base/genesis_learning.jsonl."
+    },
+
+    "Phase 3 — Crew Builder & Tool Integration": {
+      "tasks": [
+        "Develop CrewBuilder class to instantiate crews using Toolmaker, Knowledge Curator, and Archivist agents.",
+        "Add crew templates for common configurations: ResearchCrew, DeveloperCrew, GovernanceCrew.",
+        "Implement API calls to Toolmaker Co-Pilot and Knowledge Curator for on-demand tool + dataset generation.",
+        "Introduce CrewAI/AutoGen integration for agent-to-agent task orchestration."
+      ]
+    },
+
+    "Phase 4 — Mission Runner & Governance Oversight": {
+      "tasks": [
+        "Implement MissionRunner class to execute blueprints, monitor progress, and manage lifecycle.",
+        "Add governance checkpoints that automatically send agent blueprints to Human Firewall for review.",
+        "Integrate compliance kernel validation (integrity_guard.py) for each generated agent.",
+        "Store approved agents in /registry/agents_created.jsonl with provenance metadata."
+      ]
+    },
+
+    "Phase 5 — Reflective Core & Learning Feedback Loop": {
+      "tasks": [
+        "Build ReflectiveCore service that analyzes agent outcomes, measuring goal success, drift rate, and feedback latency.",
+        "Establish Genesis memory graph: short_term (current builds), procedural (creation logs), long_term (knowledge evolution).",
+        "Integrate with /knowledge_base/genesis_learning.jsonl to store pattern-based improvements.",
+        "Implement model retraining triggers when cumulative drift > threshold (0.05 default)."
+      ]
+    },
+
+    "Phase 6 — Federation & Insight Sharing": {
+      "tasks": [
+        "Connect Genesis to /services/governance/event_dispatcher.py for cross-agent knowledge propagation.",
+        "Use signed JWT federation handshake for authenticated insight exchange between factories.",
+        "Publish Genesis’s successful blueprints and performance metrics to /knowledge_base/federated/genesis_insights.jsonl.",
+        "Receive other factories’ insights and merge using semantic deduplication."
+      ]
+    },
+
+    "Phase 7 — AutoGen Orchestration & Deployment": {
+      "tasks": [
+        "Integrate with /services/autogen/bridge.py for end-to-end MAF orchestration.",
+        "Allow Genesis to register itself as a meta-agent capable of creating new autonomous subsystems.",
+        "Add YAML deployment schema: /deployment/genesis_autogen.yaml.",
+        "Enable Genesis to spin up new agents directly into running environments with safety checks."
+      ]
+    },
+
+    "Phase 8 — Reflective Autonomy Expansion": {
+      "tasks": [
+        "Enable Genesis to self-assess its design efficiency using weighted reinforcement (success rate, resource use, firewall flags).",
+        "Implement GenesisReflectionEngine class that adjusts blueprint heuristics autonomously.",
+        "Maintain GenesisPerformanceLedger.jsonl logging improvement curves.",
+        "Allow controlled self-modification cycles with Firewall approval gates."
+      ]
+    }
+  },
+
+  "integration": {
+    "agents": ["Toolmaker Co-Pilot", "Knowledge Curator", "Archivist", "Governance Console", "Prometheus Optimizer"],
+    "data_stores": ["Postgres", "Redis", "Qdrant"],
+    "compliance": ["ethical_drift_monitor.yaml", "firewall_audit.log", "integrity_guard.py"]
+  },
+
+  "learning_and_reflection": {
+    "short_term_memory": "/memory/genesis_temp.jsonl",
+    "long_term_memory": "/knowledge_base/genesis_learning.jsonl",
+    "procedural_memory": "/logs/genesis_orchestration.jsonl",
+    "reflection_engine": "Monitors creation success metrics, drift rate, and audit flags. Uses these to refine AgentDesigner heuristics."
+  },
+
+  "governance": {
+    "firewall_checkpoint": "All new agents require HITL/HOTL validation before activation.",
+    "ethical_drift_threshold": 0.05,
+    "audit_trail": "/governance/genesis_audit.jsonl",
+    "reversion_protocol": "Genesis may deactivate or quarantine agents exceeding drift limits or policy violations."
+  },
+
+  "verification": {
+    "tests": [
+      "pytest tests/genesis -v",
+      "curl localhost:5080/genesis/status",
+      "curl localhost:5080/genesis/create_agent -d '{"mission":"TestAgent"}'",
+      "Check registry/agents_created.jsonl for entries.",
+      "Review governance/firewall_audit.log for approvals."
+    ]
+  },
+
+  "outcome": "Upon completion, Genesis will operate as a self-learning, reflective system capable of autonomously designing, validating, and deploying agents while maintaining full compliance, ethical awareness, and traceability."
+}

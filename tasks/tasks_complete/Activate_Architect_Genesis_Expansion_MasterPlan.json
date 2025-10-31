@@ -1,0 +1,49 @@
+{
+  "title": "Activate Architect Genesis Expansion Master Plan — Phase Initialization and Readiness Sequence",
+  "preconditions": {
+    "repo": "agent-factory",
+    "branch": "main or feature/genesis-expansion",
+    "dependencies": [
+      "/factory_agents/architect_genesis/Genesis_Expansion_MasterPlan.json",
+      "/factory_config/api_keys.yaml",
+      "/governance/ethical_drift_monitor.yaml",
+      "/registry/agent_catalog.yaml"
+    ]
+  },
+  "plan": {
+    "steps": [
+      "1. Verify that Archivist, Toolmaker, and Knowledge Curator services are active and responding.",
+      "2. Initialize Genesis Expansion environment with new /services/genesis/ modules.",
+      "3. Create logging and governance audit files for Genesis.",
+      "4. Integrate reflective core loop into main.py.",
+      "5. Connect Genesis to federation and knowledge systems.",
+      "6. Run dry-run mission to validate core functionality.",
+      "7. Activate Phases 1–3 of Genesis (Designer, Crew Builder, Mission Runner) and stage later phases for reflection and AutoGen integration."
+    ]
+  },
+  "edits": [
+    {"path": "factory_agents/architect_genesis/main.py", "change": "Add reflective loop imports and periodic task scheduler."},
+    {"path": "services/genesis/", "change": "Add agent_designer.py, crew_builder.py, mission_runner.py, reflective_core.py stubs."},
+    {"path": "config/genesis_config.yaml", "change": "Add Genesis master plan parameters for runtime."}
+  ],
+  "tests": [
+    "pytest tests/genesis -v",
+    "uvicorn factory_agents.architect_genesis.api:app --reload --port 5080",
+    "curl localhost:5080/genesis/status"
+  ],
+  "verification": {
+    "success": [
+      "/logs/genesis_orchestration.jsonl contains new entries.",
+      "/registry/agents_created.jsonl logs generated agents.",
+      "/governance/genesis_audit.jsonl updated with firewall checkpoints.",
+      "/knowledge_base/genesis_learning.jsonl updated with reflection data."
+    ]
+  },
+  "rollback": {
+    "steps": [
+      "Revert changes in architect_genesis folder.",
+      "Delete services/genesis folder and related logs.",
+      "Rollback to pre-expansion commit."]
+  },
+  "result": "Genesis becomes a self-learning architect capable of autonomous agent creation, orchestration, and governance-aware reflection."
+}

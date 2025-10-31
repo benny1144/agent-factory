@@ -1,0 +1,50 @@
+{
+  "JUNIE_TASK": {
+    "Title": "Implement Web Search and 2025 Data Freshness (Archivist Phase 4)",
+    "Preconditions": {
+      "repo": "agent-factory",
+      "branch": "main",
+      "required_files": [
+        "factory_agents/archivist/reasoning_core.py",
+        "factory_agents/archivist/fastapi_server.py",
+        "factory_config/api_keys.env"
+      ]
+    },
+    "Plan": [
+      "1) Add search_web() helper in reasoning_core.py to perform external searches using Serper or Tavily API.",
+      "2) Parse 'search <query>' messages in fastapi_server.py and forward query to reasoning_core.search_web().",
+      "3) Return top results in Markdown format with title and link, stored in /logs/search_history.log for traceability.",
+      "4) Validate that .env file contains SERPER_API_KEY or TAVILY_API_KEY.",
+      "5) Test multiple queries and confirm results are displayed in clean, structured format in browser.",
+      "6) Add audit entries to /logs/file_access_audit.log for each search event."
+    ],
+    "Edits": [
+      {
+        "Path": "factory_agents/archivist/reasoning_core.py",
+        "Change": """# === PATCH START ===\nimport os, requests\n\ndef search_web(query: str) -> str:\n    \"\"\"Perform external web search using Serper or Tavily API for real-time context.\"\"\"\n    api_key = os.getenv('SERPER_API_KEY') or os.getenv('TAVILY_API_KEY')\n    if not api_key:\n        return '❗ No web search API key configured. Please add SERPER_API_KEY or TAVILY_API_KEY to factory_config/api_keys.env.'\n\n    headers = {'X-API-KEY': api_key, 'Content-Type': 'application/json'}\n    payload = {'q': query, 'num': 5}\n\n    try:\n        res = requests.post('https://google.serper.dev/search', headers=headers, json=payload, timeout=15)\n        data = res.json()\n        if 'organic' not in data:\n            return f'⚠️ No results found for {query}.'\n\n        results = '\n'.join([f"- **{r['title']}** — {r['link']}" for r in data['organic'][:5]])\n        log_path = os.path.join('logs', 'search_history.log')\n        with open(log_path, 'a') as log:\n            log.write(f"[SEARCH] {query}\n")\n        return f"🜂 **Archy Web Insight**\n## Top Results for '{query}'\n{results}"\n    except Exception as e:\n        return f"❗ Web search failed: {e}"\n# === PATCH END ==="""
+      },
+      {
+        "Path": "factory_agents/archivist/fastapi_server.py",
+        "Change": """# === PATCH START ===\nif message.lower().startswith('search '):\n    query = message.split('search ', 1)[1].strip()\n    reply = reasoning_core.search_web(query)\n    return {'reply': format_response(reply)}\n# === PATCH END ==="""
+      }
+    ],
+    "Tests": [
+      "1) Add SERPER_API_KEY=<key> or TAVILY_API_KEY=<key> to factory_config/api_keys.env.",
+      "2) Restart FastAPI server.",
+      "3) Send POST request: {\"message\":\"search 2025 AI agent frameworks\"}.",
+      "4) Verify Markdown response shows 3–5 web results with links.",
+      "5) Confirm /logs/search_history.log contains entry for the search.",
+      "6) Verify no unhandled exceptions if API key missing or query malformed."
+    ],
+    "Verification": [
+      "Web search produces valid formatted Markdown output.",
+      "Search logs created in /logs/search_history.log.",
+      "No runtime errors for missing keys or timeout conditions.",
+      "Audit log entry appears for each search command."
+    ],
+    "Rollback": [
+      "git restore factory_agents/archivist/reasoning_core.py",
+      "git restore factory_agents/archivist/fastapi_server.py"
+    ]
+  }
+}

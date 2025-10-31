@@ -1,0 +1,9 @@
+{
+  "phase": 12,
+  "title": "Final Integration and Snapshot",
+  "action": "Run integration tests and export /governance/factory_build_snapshot_v7.json.",
+  "status": "success",
+  "details": {
+    "subtasks": {}
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "task_name": "Junie_DUNI_Tunnel_Autoheal_Setup",
+  "type": "automation",
+  "description": "Set up a self-healing Cloudflare tunnel and Junie bridge watchdog system to ensure gpt.disagreements.ai is always online.",
+  "created_by": "AgentFactoryExpert",
+  "priority": "critical",
+  "steps": [
+    {
+      "name": "Verify cloudflared config",
+      "action": "create_or_update_file",
+      "path": "C:\\Users\\benny\\IdeaProjects\\agent-factory\\.cloudflared\\config.yml",
+      "content": "tunnel: 6a6523c4-6712-4c3e-83b8-ce9a31867997\ncredentials-file: C:\\Users\\benny\\.cloudflared\\6a6523c4-6712-4c3e-83b8-ce9a31867997.json\n\ningress:\n  - hostname: gpt.disagreements.ai\n    service: http://localhost:5050\n  - service: http_status:404\n",
+      "validation": {
+        "must_exist": [
+          "C:\\Users\\benny\\.cloudflared\\6a6523c4-6712-4c3e-83b8-ce9a31867997.json"
+        ]
+      }
+    },
+    {
+      "name": "Create watchdog script",
+      "action": "create_or_update_file",
+      "path": "C:\\Users\\benny\\IdeaProjects\\agent-factory\\watchdog.ps1",
+      "content": "$LocalHealth = \"http://127.0.0.1:5050/health\"\n$RemoteHealth = \"https://gpt.disagreements.ai/health\"\n$CloudflaredService = \"Cloudflared\"\n$BridgeScript = \"C:\\\\\\Users\\\\benny\\\\IdeaProjects\\\\agent-factory\\\\scripts\\\\start_junie_bridge.py\"\n$PythonExe = \"python\"\n\nfunction Log($msg) {\n    $timestamp = (Get-Date).ToString(\"yyyy-MM-dd HH:mm:ss\")\n    Add-Content \"C:\\\\\\Users\\\\benny\\\\IdeaProjects\\\\agent-factory\\\\logs\\\\watchdog.log\" \"$timestamp  $msg\"\n}\n\nfunction Test-Health($url) {\n    try {\n        $r = Invoke-RestMethod -Uri $url -TimeoutSec 5 -ErrorAction Stop\n        if ($r.status -eq \"ok\") { return $true } else { return $false }\n    } catch { return $false }\n}\n\nwhile ($true) {\n    $localOK = Test-Health $LocalHealth\n    $remoteOK = Test-Health $RemoteHealth\n\n    if (-not $localOK) {\n        Log \"Local bridge unhealthy — restarting...\"\n        Stop-Process -Name python -ErrorAction SilentlyContinue\n        Start-Process $PythonExe $BridgeScript\n        Start-Sleep -Seconds 10\n    }\n\n    if (-not $remoteOK) {\n        Log \"Remote tunnel unhealthy — restarting Cloudflared...\"\n        net stop $CloudflaredService | Out-Null\n        Start-Sleep -Seconds 5\n        net start $CloudflaredService | Out-Null\n    }\n\n    Start-Sleep -Seconds 60\n}"
+    },
+    {
+      "name": "Create JunieBridge_Expert task XML",
+      "action": "create_file",
+      "path": "C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\JunieBridge_Expert.xml",
+      "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Task version=\"1.4\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n  <RegistrationInfo>\n    <Author>benny</Author>\n    <Description>Starts the Junie Bridge on system startup</Description>\n  </RegistrationInfo>\n  <Triggers>\n    <BootTrigger>\n      <Enabled>true</Enabled>\n      <Delay>PT10S</Delay>\n    </BootTrigger>\n  </Triggers>\n  <Principals>\n    <Principal id=\"Author\">\n      <RunLevel>HighestAvailable</RunLevel>\n    </Principal>\n  </Principals>\n  <Settings>\n    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n    <RestartOnFailure>\n      <Interval>PT1M</Interval>\n      <Count>3</Count>\n    </RestartOnFailure>\n    <Enabled>true</Enabled>\n  </Settings>\n  <Actions Context=\"Author\">\n    <Exec>\n      <Command>powershell.exe</Command>\n      <Arguments>-ExecutionPolicy Bypass -Command \"Start-Sleep -Seconds 10; cd 'C:\\Users\\benny\\IdeaProjects\\agent-factory'; python 'scripts/start_junie_bridge.py' --federation on --agent Expert\"</Arguments>\n    </Exec>\n  </Actions>\n</Task>"
+    },
+    {
+      "name": "Create Junie_Watchdog task XML",
+      "action": "create_file",
+      "path": "C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\Junie_Watchdog.xml",
+      "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Task version=\"1.4\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n  <RegistrationInfo>\n    <Author>benny</Author>\n    <Description>Run the Junie watchdog monitor at system startup</Description>\n  </RegistrationInfo>\n  <Triggers>\n    <BootTrigger>\n      <Enabled>true</Enabled>\n    </BootTrigger>\n  </Triggers>\n  <Principals>\n    <Principal id=\"Author\">\n      <RunLevel>HighestAvailable</RunLevel>\n    </Principal>\n  </Principals>\n  <Settings>\n    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>\n    <RestartOnFailure>\n      <Interval>PT1M</Interval>\n      <Count>3</Count>\n    </RestartOnFailure>\n    <Enabled>true</Enabled>\n  </Settings>\n  <Actions Context=\"Author\">\n    <Exec>\n      <Command>powershell.exe</Command>\n      <Arguments>-ExecutionPolicy Bypass -File \"C:\\Users\\benny\\IdeaProjects\\agent-factory\\watchdog.ps1\"</Arguments>\n    </Exec>\n  </Actions>\n</Task>"
+    },
+    {
+      "name": "Validate configuration integrity",
+      "action": "validate",
+      "checks": [
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\.cloudflared\\config.yml",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\watchdog.ps1",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\JunieBridge_Expert.xml",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\Junie_Watchdog.xml",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\scripts\\start_junie_bridge.py"
+      ],
+      "on_failure": "log_to:C:\\Users\\benny\\IdeaProjects\\agent-factory\\logs\\duni_task_validation.log"
+    },
+    {
+      "name": "Notify completion",
+      "action": "output_message",
+      "message": "✅ Junie_DUNI_Tunnel_Autoheal_Setup complete. Please run the following steps manually as Administrator:\n\n1️⃣ Recreate and start Cloudflared service:\n   sc.exe delete Cloudflared\n   sc.exe create Cloudflared binPath= \"\\\"C:\\Program Files (x86)\\cloudflared\\cloudflared.exe\\\" tunnel run gpt\" start=auto\n   Set-Service -Name Cloudflared -StartupType AutomaticDelayedStart\n   net start Cloudflared\n\n2️⃣ Import tasks:\n   schtasks /create /tn \"JunieBridge_Expert\" /xml \"C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\JunieBridge_Expert.xml\"\n   schtasks /create /tn \"Junie_Watchdog\" /xml \"C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\Junie_Watchdog.xml\"\n\n3️⃣ Verify health:\n   curl -v https://gpt.disagreements.ai/health"
+    }
+  ]
+}
