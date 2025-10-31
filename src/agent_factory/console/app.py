@@ -93,6 +93,7 @@ try:
             <html><head><title>Watchtower</title></head>
             <body style='font-family: system-ui'>
               <h1>Watchtower Dashboard</h1>
+              <p>Watchtower UI loaded successfully</p>
               <p>Static build not found at <code>frontend/watchtower/dist</code>.</p>
               <p>Run <code>npm --prefix frontend/watchtower ci --omit=dev && npm --prefix frontend/watchtower run build</code> then redeploy.</p>
             </body></html>

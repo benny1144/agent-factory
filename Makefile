@@ -1,6 +1,6 @@
 # Agent Factory Makefile
 
-.PHONY: start genesis validate validate-fix validate-kba audit-kba setup
+.PHONY: start genesis validate validate-fix validate-kba audit-kba setup poetry-sync export-reqs phase-40.9 verify-phase-40.9
 
 start:
 	@python scripts/startup_check.py && python factory_agents/architect_genesis/main.py
@@ -42,3 +42,16 @@ payload-validate:
 
 payload-send:
 	@python scripts/send_archivist_build.py --send payloads/archivist_creation_request.json
+
+# Phase 40.9 — Poetry lock sync and requirements export
+poetry-sync:
+	@python scripts/poetry_sync_and_export.py
+
+export-reqs:
+	@python scripts/poetry_sync_and_export.py
+
+phase-40.9:
+	@python scripts/poetry_sync_and_export.py
+
+verify-phase-40.9:
+	@python scripts/verify_phase_40_9.py
