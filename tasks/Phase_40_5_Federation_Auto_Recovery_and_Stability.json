@@ -1,0 +1,42 @@
+{
+  "title": "Phase 40.5 — Federation Auto-Recovery & Stability Enhancement",
+  "preconditions": {
+    "phase_40_2_complete": true,
+    "heartbeat_scheduler_active": true,
+    "logs_accessible": "logs/<agent>/runtime.log",
+    "governance_event_bus": "governance/event_bus.jsonl",
+    "openai_api_key_present": true
+  },
+  "plan": [
+    "Implement Auto-Heal Daemon that monitors runtime logs and regenerates missing heartbeats for any agent silent > 30 minutes.",
+    "Add Render Webhook Notifier — triggers POST to Render on full-green status (all agents healthy > 30 min).",
+    "Add GCP Logging Bridge — send summarized federation health snapshots every 60 minutes via gcp-logging API.",
+    "Integrate with check_health.py to flag auto-recovery actions and log them to governance/audits.",
+    "Add configuration section to utils/paths.py or config/federation.yaml defining heartbeat intervals, thresholds, and webhook URLs.",
+    "Create test suite tests/test_autoheal_daemon.py to verify recovery, webhook, and logging behaviors.",
+    "Update heartbeat_scheduler.py to import and call auto-heal service on each cycle."
+  ],
+  "edits": {
+    "path:scripts/autoheal_daemon.py": "New module implementing continuous monitoring and recovery.",
+    "path:scripts/check_health.py": "Add auto-recovery flag reporting and detailed per-agent uptime stats.",
+    "path:scripts/heartbeat_scheduler.py": "Import autoheal_daemon and invoke heal_missing_heartbeats().",
+    "path:config/federation.yaml": "Add heartbeat_interval, recovery_threshold, webhook_url, gcp_logging_enabled."
+  },
+  "verification": {
+    "manual": [
+      "Run python scripts/heartbeat_scheduler.py; verify that an agent missing heartbeat is automatically restored.",
+      "Run python scripts/check_health.py --all; confirm all services healthy and Auto-Heal logged.",
+      "Confirm Render webhook POST received when federation all-green for > 30 minutes.",
+      "Confirm new entries in governance/event_bus.jsonl showing auto-heal and webhook dispatch events."
+    ],
+    "automated": [
+      "pytest tests/test_autoheal_daemon.py"
+    ]
+  },
+  "rollback": [
+    "Stop auto-heal daemon process.",
+    "Remove scripts/autoheal_daemon.py.",
+    "Delete new config keys from config/federation.yaml."
+  ],
+  "rationale": "This task closes the loop on federation self-governance by enabling autonomous detection, recovery, and verification of agent health. The Render and GCP bridges ensure real-time observability and trust in long-running distributed deployments."
+}
