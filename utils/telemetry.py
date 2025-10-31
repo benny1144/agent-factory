@@ -47,3 +47,31 @@ def telemetry_status() -> dict:
         return {"active": str(last.get('telemetry', '')).upper() == 'ACTIVE'}
     except Exception:
         return {"active": False}
+
+
+def summarize_metrics() -> dict:
+    """Summarize basic telemetry metrics for the console UI.
+
+    Returns a light-weight dictionary including:
+    - telemetry_active: boolean based on telemetry_status()
+    - infra_health_count: number of lines in logs/infra_health.jsonl (if present)
+    - governance_audit_size: size in bytes of governance/orion_audit.jsonl (if present)
+    """
+    summary = {
+        "telemetry_active": telemetry_status().get("active", False),
+        "infra_health_count": 0,
+        "governance_audit_size": 0,
+    }
+    try:
+        infra = LOGS_DIR / 'infra_health.jsonl'
+        if infra.exists():
+            with infra.open('r', encoding='utf-8') as f:
+                summary["infra_health_count"] = sum(1 for _ in f)
+    except Exception:
+        pass
+    try:
+        if TELEMETRY_AUDIT.exists():
+            summary["governance_audit_size"] = TELEMETRY_AUDIT.stat().st_size
+    except Exception:
+        pass
+    return summary

@@ -7,7 +7,24 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
-from agent_factory.utils.telemetry import TELEMETRY_DIR, summarize_metrics
+try:
+    from agent_factory.utils.telemetry import TELEMETRY_DIR, summarize_metrics
+except ImportError:
+    # Fallback for refactored telemetry layout
+    from agent_factory.utils.telemetry import summarize_metrics
+    try:
+        from agent_factory.utils.paths import LOGS_DIR as TELEMETRY_DIR
+    except ImportError:
+        import os
+        from pathlib import Path
+        TELEMETRY_DIR = Path(os.getcwd()) / "logs"
+
+# Ensure the TELEMETRY_DIR path exists before startup
+from pathlib import Path as _Path
+if not isinstance(TELEMETRY_DIR, _Path):
+    TELEMETRY_DIR = _Path(TELEMETRY_DIR)
+TELEMETRY_DIR.mkdir(parents=True, exist_ok=True)
+print(f"[Init] TELEMETRY_DIR → {TELEMETRY_DIR}")
 from .api import router as compliance_router
 from .api_routes import router as ui_router
 from .health import router as health_router
@@ -114,4 +131,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/healthz")
 def healthz() -> dict:
+    return {"status": "ok", "service": "agent-factory-console"}
+
+
+# Render health check endpoint
+@app.get("/health")
+def health() -> dict:
     return {"status": "ok", "service": "agent-factory-console"}
