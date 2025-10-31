@@ -1,4 +1,4 @@
-services:
+﻿services:
   - type: web
     name: agent-factory-ui
     env: python
@@ -9,7 +9,7 @@ services:
       pip install -r src/requirements.txt && \
       npm --prefix frontend/watchtower ci && \
       npm --prefix frontend/watchtower run build
-    startCommand: python -m uvicorn agent_factory.console.app:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m uvicorn agent_factory.console.app:app --host 0.0.0.0 --port 
     envVars:
       - key: PYTHONPATH
         value: src
