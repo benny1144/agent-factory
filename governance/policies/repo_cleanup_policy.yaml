@@ -1,0 +1,129 @@
+# ============================================================
+# Agent Factory Governance Policy
+# Repository Optimization & Compliance Maintenance
+# Version: v7.6.40
+# ============================================================
+
+policy_id: GOV-REPO-CLEANUP
+title: Repository Optimization and Compliance Policy
+category: Governance::Maintenance
+created_at: 2025-10-31T00:00:00Z
+maintainer: AgentFactoryExpert
+governed_by:
+  - Human Firewall Protocol v2.1
+  - Governance Kernel v7.6+
+  - Watchtower Indexing Standard v1.5
+  - Federation Compliance Charter
+
+objectives:
+  - Maintain deterministic and secure build environments.
+  - Remove redundant, compiled, and transient artifacts.
+  - Ensure all cleanup actions are fully auditable and reversible.
+  - Maintain integrity across all agent subsystems, governance layers, and frontend services.
+
+scope:
+  applies_to:
+    - repository_root: true
+    - factory_agents/**
+    - core/**
+    - governance/**
+    - frontend/**
+    - scripts/**
+  exclusions:
+    - factory_config/api_keys.yaml
+    - factory_config/secrets.yaml
+    - .env
+    - .venv/
+    - logs/ (retain for diagnostics but rotate monthly)
+    - governance/audits/
+    - knowledge_base/core/
+    - any file tagged "#permanent" in header
+
+frequency:
+  schedule:
+    - quarterly
+  trigger_events:
+    - manual: phase_execution(40)
+    - auto: watchtower_event(repository.integrity_warning)
+
+governance_controls:
+  human_firewall:
+    approver: benny
+    required: true
+    checkpoint_stage: before_commit_cleanup
+  audit_signature:
+    algorithm: SHA256
+    signature_file: governance/audits/repo_cleanup_signature.json
+  watchtower_event:
+    name: cleanup_complete
+    payload: governance/audits/repo_cleanup_report.json
+    notify: Orion, Archy, ComplianceKernel
+  auto_backup:
+    enabled: true
+    destination: governance/audits/repo_cleanup_backup_<timestamp>.zip
+  rollback:
+    enabled: true
+    procedure:
+      - git revert HEAD
+      - python scripts/restore_repo_backup.py governance/audits/repo_cleanup_backup_<timestamp>.zip
+
+execution_guidelines:
+  step_order:
+    1: "Run scripts/cleanup_repo_structure.py (dry-run)"
+    2: "HITL review and approval"
+    3: "Run cleanup with --commit flag"
+    4: "Execute post_cleanup_verification.py"
+    5: "Emit Watchtower event"
+    6: "Commit and push to main branch"
+  safety:
+    dry_run_default: true
+    require_hitl_before_commit: true
+    forbid_direct_cleanup_without_audit: true
+
+audit_and_logging:
+  report_file: governance/audits/repo_cleanup_report.json
+  diff_log: logs/repo_cleanup_diff.log
+  backup_manifest: governance/audits/repo_cleanup_backup_<timestamp>.zip
+  retention: 1 year
+  publish_to_dashboard: true
+
+metrics:
+  tracked:
+    - files_removed
+    - lines_changed
+    - size_reduced_mb
+    - duration_seconds
+    - errors_encountered
+  thresholds:
+    warning: >500 files removed or >250MB reduced
+    critical: >5 critical files flagged (auto-abort)
+
+notifications:
+  channels:
+    - watchtower_alert
+    - governance_dashboard
+    - compliance_kernel_log
+  message_template: |
+    🧹 Repository Cleanup Completed
+    Phase: 40
+    Files removed: {{files_removed}}
+    Size reduced: {{size_reduced_mb}} MB
+    Audit: {{audit_signature}}
+
+validation:
+  post_cleanup_verification:
+    enabled: true
+    script: scripts/post_cleanup_verification.py
+  integrity_check:
+    run_archy_validation: true
+    run_federation_manifest_diff: true
+
+compliance_status:
+  default: pending
+  post_execution: verified
+
+notes: |
+  This policy enforces structured, reversible repository maintenance as part of the Factory’s
+  ongoing governance cycle. Every cleanup action must be auditable, signed, and reviewed
+  by the designated HITL approver. The Watchtower system uses emitted events to update
+  its integrity index and inform Orion of any structural changes.

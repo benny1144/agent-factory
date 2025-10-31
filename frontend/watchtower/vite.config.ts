@@ -15,6 +15,14 @@ export default defineConfig({
         target: 'http://localhost:8001',
         changeOrigin: true,
       },
+      '/gov/audit': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/gov/audit/status': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
       '/orion/send': {
         target: 'http://localhost:8001',
         changeOrigin: true,

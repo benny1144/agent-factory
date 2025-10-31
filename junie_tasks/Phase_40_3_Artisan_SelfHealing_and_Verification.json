@@ -1,0 +1,48 @@
+{
+  "title": "Phase 40.3 — Artisan Self-Healing Verification & Federation Confirmation",
+  "description": "This task validates the successful completion of the Artisan Federation integration (Phase 40.2) and applies the self-healing system to ensure all artifacts are present, valid, and operational. Junie will run the new verification script, apply repair logic if needed, and confirm that Artisan is fully integrated into the Orion Federation network.",
+  "preconditions": [
+    "Phase 40.2 has been executed successfully by Junie.",
+    "All federation manifests and audit reports are expected under /governance/manifests and /reports.",
+    "The Orion control plane is reachable and watchtower is configured."
+  ],
+  "plan": [
+    "1. Execute the validation and repair script to confirm all federation artifacts exist.",
+    "   Command: python scripts/verify_artisan_phase_40_2.py --repair",
+    "2. Ensure the following files exist and are valid:",
+    "   - governance/manifests/artisan_federation_manifest.yaml",
+    "   - core/orion_bootstrap_patch_artisan.py",
+    "   - reports/artisan_audit_report.json",
+    "   - reports/artisan_security_audit.json",
+    "   - reports/artisan_code_graph.json",
+    "   - scripts/check_health_patch_artisan.json",
+    "3. Run the Orion patch to register Artisan with the Federation Control Plane.",
+    "   Command: python core/orion_bootstrap_patch_artisan.py",
+    "4. Confirm successful federation handshake via health validation.",
+    "   Command: python scripts/check_health.py --service artisan",
+    "5. If all checks pass, Junie commits all validated artifacts with message: 'Phase 40.3 - Artisan Federation Verified & Self-Healing Complete'.",
+    "6. Push to main branch for final federation registry sync."
+  ],
+  "verification": [
+    "All files listed above exist and contain valid JSON/YAML.",
+    "check_health.py returns '✅ Service OK: artisan runtime healthy'.",
+    "Orion patch output confirms: '[OrionPatch] Artisan federation member registered.'",
+    "No missing artifact warnings remain after --repair execution."
+  ],
+  "rollback": [
+    "Restore from /backups/phase_40_2_repair_<timestamp>/ if any generated artifact causes a federation mismatch.",
+    "Re-run 'python scripts/verify_artisan_phase_40_2.py --repair' to reapply stable stubs.",
+    "Confirm federation manifest alignment using governance/audit_suite.py."
+  ],
+  "expected_output": [
+    "Artisan federation node confirmed operational.",
+    "All audit and manifest artifacts validated.",
+    "System integrity maintained for Watchtower and Orion registry."
+  ],
+  "postconditions": [
+    "Artisan executor fully integrated into the federation.",
+    "Governance and compliance reports validated and committed.",
+    "Ready for Watchtower deployment and federation runtime diagnostics."
+  ],
+  "status": "pending"
+}

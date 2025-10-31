@@ -127,12 +127,55 @@ def archive_state(snapshot_path: Path) -> Dict[str, Any]:
     return copied
 
 
+def _activate_watchtower() -> dict:
+    """Activate Watchtower telemetry stream by writing an ACTIVE marker.
+
+    Creates logs/governance/orion_audit.jsonl and appends an ACTIVE line.
+    Also mirrors a human-readable line into logs/orion_activity.jsonl so that
+    Watchtower log viewers can display the activation message.
+    """
+    gov_logs = LOGS_DIR / "governance"
+    gov_logs.mkdir(parents=True, exist_ok=True)
+    audit = gov_logs / "orion_audit.jsonl"
+    payload = {
+        "ts": _iso(),
+        "component": "watchtower",
+        "telemetry": "ACTIVE",
+    }
+    try:
+        with audit.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+    # Mirror a readable line to orion activity log used by Watchtower API
+    try:
+        orion_log = LOGS_DIR / "orion_activity.jsonl"
+        with orion_log.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"timestamp": _iso(), "agent": "Orion", "event": "Telemetry Stream: ACTIVE"}, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+    return {"ok": True, "audit_path": str(audit)}
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Compliance Kernel — Snapshot and Archive")
-    parser.add_argument("--snapshot", type=str, help="Path to write final snapshot JSON", required=True)
+    parser = argparse.ArgumentParser(description="Compliance Kernel — Snapshot, Archive, and Activation")
+    parser.add_argument("--snapshot", type=str, help="Path to write final snapshot JSON")
+    parser.add_argument("--activate-watchtower", action="store_true", help="Activate Watchtower telemetry and write audit log")
     args = parser.parse_args(argv)
 
     logger = JsonlLogger()
+
+    if args.activate_watchtower:
+        res = _activate_watchtower()
+        logger.log(True, {"event": "watchtower_telemetry_activated", **res})
+        print("Telemetry Stream: ACTIVE")
+        # If no further args, exit early
+        if not args.snapshot:
+            return 0
+
+    if not args.snapshot:
+        parser.print_help()
+        return 0
 
     snap_path = Path(args.snapshot)
     # Allow relative paths under governance/

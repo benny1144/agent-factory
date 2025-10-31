@@ -1,0 +1,75 @@
+# ==============================================================
+# JUNIE TASK — PHASE 39.4
+# Watchtower Activation & Live Governance Relay
+# ==============================================================
+
+task_id: Phase_39_4_Watchtower_Activation_and_Live_Governance_Relay
+title: "Activate Watchtower Governance Relay and Live Metrics Interface"
+phase: 39.4
+assigned_to: Junie
+supervisor: AgentFactoryExpert
+approver: benny
+priority: critical
+status: pending
+created_at: "2025-10-31T03:00:00Z"
+
+objectives:
+  - Initialize Watchtower as the live governance metrics relay for Orion and the Compliance Kernel.
+  - Connect governance/audits/, logs/, and federation manifests to the Watchtower dashboard.
+  - Enable real-time policy change tracking and visual HITL checkpoint verification.
+  - Validate secure relay between Orion, Junie, and Watchtower for governance events.
+  - Confirm live stream of GDPval and Audit data to the Governance Console.
+
+preconditions:
+  repo: benny1144/agent-factory
+  branch: main
+  dependencies:
+    - rich
+    - fastapi
+    - websockets
+    - pydantic
+  linked_phases:
+    - Phase_39_2_Orion_Control_Integration
+    - Phase_39_3_Orion_Federation_Sync_Policy_Bridge
+  governance_directories:
+    - governance/audits/
+    - governance/policies/
+    - governance/federation_manifest_v7_5.json
+    - logs/
+
+plan:
+  steps:
+    - Step 1: Start Watchtower backend relay in frontend/watchtower/ and frontend/watchtower_chat/.
+    - Step 2: Register governance events (HITL approvals, policy updates, compliance runs).
+    - Step 3: Establish WebSocket communication between Orion (core/orion_bootstrap.py) and Watchtower API.
+    - Step 4: Map real-time updates from /logs and /governance/audits/ into Watchtower’s event bus.
+    - Step 5: Sync Watchtower visual dashboard components with Orion’s federation topology data.
+    - Step 6: Validate data integrity using governance/event_bus.jsonl.
+    - Step 7: Confirm HITL checkpoint notifications appear in live dashboard.
+    - Step 8: Run end-to-end test via scripts/check_health.py to confirm live relay health.
+
+verification:
+  commands:
+    - python scripts/check_health.py --watchtower
+    - python scripts/post_cleanup_verification.py --policy GOV-WATCHTOWER
+  checks:
+    - "Watchtower dashboard reflects live policy and HITL metrics."
+    - "Real-time events appear in governance/event_bus.jsonl."
+    - "No missing or delayed event streams detected for >5s interval."
+    - "Orion and Watchtower mutual authentication confirmed."
+
+rollback:
+  remove_paths:
+    - frontend/watchtower/
+    - frontend/watchtower_chat/
+  restore_from:
+    - governance/federation_manifest_v7_5.json.bak
+  revalidation:
+    - python scripts/phase4_9_stability.py --reset-watchtower
+    - poetry run pytest tests/test_reflective_firewall.py
+
+notes: >
+  This task establishes Watchtower as the live governance telemetry relay.
+  Once complete, all governance policies (including GDPval, HITL confirmations,
+  and Federation Kernel updates) will appear in real time through the dashboard.
+  The task must be verified by both Orion and Junie before Watchtower is marked operational.

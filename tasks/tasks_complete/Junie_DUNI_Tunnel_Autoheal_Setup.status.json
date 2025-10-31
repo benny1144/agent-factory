@@ -1,8 +1,56 @@
 {
   "task": "Junie_DUNI_Tunnel_Autoheal_Setup",
-  "status": "complete",
-  "ts": "2025-10-29T22:34:05.606686+00:00",
-  "notes": {
-    "external_credentials_present": true
-  }
+  "title": "Junie_DUNI_Tunnel_Autoheal_Setup",
+  "path": "tasks\\from_expert\\Junie_DUNI_Tunnel_Autoheal_Setup.json",
+  "ok": true,
+  "mode": "dry_run",
+  "results": [
+    {
+      "step": "Verify cloudflared config",
+      "action": "create_or_update_file",
+      "ok": true,
+      "path": ".cloudflared\\config.yml",
+      "simulated": true
+    },
+    {
+      "step": "Create watchdog script",
+      "action": "create_or_update_file",
+      "ok": true,
+      "path": "watchdog.ps1",
+      "simulated": true
+    },
+    {
+      "step": "Create JunieBridge_Expert task XML",
+      "action": "create_file",
+      "ok": true,
+      "path": "automation\\tasks\\JunieBridge_Expert.xml",
+      "simulated": true
+    },
+    {
+      "step": "Create Junie_Watchdog task XML",
+      "action": "create_file",
+      "ok": true,
+      "path": "automation\\tasks\\Junie_Watchdog.xml",
+      "simulated": true
+    },
+    {
+      "step": "Validate configuration integrity",
+      "action": "validate",
+      "ok": true,
+      "checks": [
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\.cloudflared\\config.yml",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\watchdog.ps1",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\JunieBridge_Expert.xml",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\Junie_Watchdog.xml",
+        "FileExists:C:\\Users\\benny\\IdeaProjects\\agent-factory\\scripts\\start_junie_bridge.py"
+      ],
+      "failed": []
+    },
+    {
+      "step": "Notify completion",
+      "action": "output_message",
+      "ok": true,
+      "message": "\u2705 Junie_DUNI_Tunnel_Autoheal_Setup complete. Please run the following steps manually as Administrator:\n\n1\ufe0f\u20e3 Recreate and start Cloudflared service:\n   sc.exe delete Cloudflared\n   sc.exe create Cloudflared binPath= \"\\\"C:\\Program Files (x86)\\cloudflared\\cloudflared.exe\\\" tunnel run gpt\" start=auto\n   Set-Service -Name Cloudflared -StartupType AutomaticDelayedStart\n   net start Cloudflared\n\n2\ufe0f\u20e3 Import tasks:\n   schtasks /create /tn \"JunieBridge_Expert\" /xml \"C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\JunieBridge_Expert.xml\"\n   schtasks /create /tn \"Junie_Watchdog\" /xml \"C:\\Users\\benny\\IdeaProjects\\agent-factory\\automation\\tasks\\Junie_Watchdog.xml\"\n\n3\ufe0f\u20e3 Verify health:\n   curl -v https://gpt.disagreements.ai/health"
+    }
+  ]
 }

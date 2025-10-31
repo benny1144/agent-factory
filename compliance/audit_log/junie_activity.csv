@@ -2,3 +2,4 @@ ts,action,details
 2025-10-26T17:17:00Z,pathing_correction_complete,"Created agent_factory.utils wrappers; added package markers; added tools.startup bootstrap."
 
 2025-10-26T17:25:00Z,cleanup_preflight_scaffold,{"files":["tools/config_loader.py","tools/firewall_admin.py","tools/governance_check.py","scripts/preflight.py","tools/log_utils.py","environment/requirements_master.txt",".pre-commit-config.yaml"]}
+20251031T043634Z,preflight_ok,env_report=C:/Users/benny/IdeaProjects/agent-factory/reports/environment_audit_20251031T043634Z.txt

@@ -5,6 +5,8 @@ from __future__ import annotations
 Runs the normalized executor loop and provides a --test mode to validate
 runtime logging and directory layout without executing tasks.
 """
+import subprocess, sys, os
+subprocess.Popen([sys.executable, "scripts/heartbeat_scheduler.py"], cwd=os.getcwd())
 
 import argparse
 import sys

@@ -1,147 +1,141 @@
 from __future__ import annotations
-
-import json
-import os
-import sys
-import time
-from datetime import datetime, timezone
+import json, argparse, asyncio
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Dict, Any
+import sys, site
+site.main()  # manually load site-packages
+from rich.console import Console
+from rich.table import Table
 
-# Prefer repo-root safe paths per utils/paths.py
-PROJECT_ROOT: Path
-try:
-    from utils.paths import PROJECT_ROOT as _PR
-    PROJECT_ROOT = _PR
-except Exception:
-    PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# === Path Setup ===
+ROOT = Path(__file__).resolve().parents[1]
+LOGS = ROOT / "logs"
+EVENT_BUS = ROOT / "governance" / "event_bus.jsonl"
+AUDIT_LOG = ROOT / "logs" / "governance" / "health_checks.jsonl"
 
-LOG_DIR = PROJECT_ROOT / "build" / "health_logs"
-LOG_DIR.mkdir(parents=True, exist_ok=True)
+for p in [LOGS, AUDIT_LOG.parent]:
+    p.mkdir(parents=True, exist_ok=True)
 
-DEFAULT_PRIMARY = "https://api.disagreements.ai/health"
-DEFAULT_MIRROR = "https://mirror.disagreements.ai/health"
+console = Console()
 
-
-def _now_iso() -> str:
+# === Core Helpers ===
+def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
+def emit_event(agent: str, evt_type: str, details: dict | None = None):
+    rec = {
+        "ts": utc_now(),
+        "agent": agent,
+        "type": evt_type,
+        "details": details or {},
+    }
+    with open(EVENT_BUS, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec) + "\n")
 
-def _iso_filename(ts: str | None = None) -> str:
-    ts = ts or _now_iso()
-    # Windows-safe: replace ":" with "-"
-    return f"health_{ts.replace(':', '-')}" + ".json"
+def audit(service: str, ok: bool, meta: dict | None = None):
+    rec = {
+        "ts": utc_now(),
+        "service": service,
+        "ok": ok,
+        "meta": meta or {},
+    }
+    with open(AUDIT_LOG, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec) + "\n")
 
+# === Health Logic ===
+def check_runtime_log(service: str) -> tuple[bool, str]:
+    """Return (ok, message) by checking log freshness & heartbeat content."""
+    log_path = LOGS / service / "runtime.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
-def _http_get_json(url: str, timeout: float = 10.0) -> Tuple[bool, Dict[str, Any] | None, str | None]:
-    """Fetch URL and parse JSON. Returns (ok, json, error). No hard dep on requests."""
-    start = time.time()
+    # Auto-heal missing log
+    if not log_path.exists():
+        log_path.write_text(f"{utc_now()} INIT {service} runtime log\n", encoding="utf-8")
+        return False, "no heartbeat yet"
+
+    lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    if not lines:
+        return False, "empty log"
+
+    last = lines[-1]
     try:
-        try:
-            import requests  # type: ignore
+        ts = datetime.fromisoformat(last.split()[0].replace("Z", "+00:00"))
+    except Exception:
+        ts = datetime.now(timezone.utc) - timedelta(days=1)
 
-            r = requests.get(url, timeout=timeout)
-            r.raise_for_status()
+    recent = datetime.now(timezone.utc) - ts < timedelta(minutes=5)
+    ok = ("ok" in last.lower() or "healthy" in last.lower()) and recent
+    return ok, last.strip()
+
+def check_event_bus(service: str) -> tuple[bool, str]:
+    """If no recent heartbeat in log, fallback to event bus activity."""
+    if not EVENT_BUS.exists():
+        return False, "no event bus"
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
+    with open(EVENT_BUS, "r", encoding="utf-8") as f:
+        for line in reversed(f.readlines()[-100:]):  # last 100 events
             try:
-                data = r.json()
+                evt = json.loads(line)
+                if evt.get("agent", "").lower() == service.lower():
+                    ts = datetime.fromisoformat(evt["ts"].replace("Z", "+00:00"))
+                    if ts >= cutoff:
+                        return True, "recent event"
             except Exception:
-                data = {"raw": r.text}
-            return True, data, None
-        except Exception:
-            # Fallback to urllib
-            import json as _json
-            from urllib.request import urlopen, Request  # type: ignore
+                continue
+    return False, "stale or no events"
 
-            req = Request(url, headers={"User-Agent": "AgentFactoryHealth/1.0"})
-            with urlopen(req, timeout=timeout) as resp:  # nosec - simple GET
-                text = resp.read().decode("utf-8", errors="ignore")
-                try:
-                    data = _json.loads(text)
-                except Exception:
-                    data = {"raw": text}
-                # Treat HTTP 200 only as success when using urllib
-                ok = 200 <= getattr(resp, "status", 200) < 300
-                if ok:
-                    return True, data, None
-                return False, None, f"HTTP {getattr(resp, 'status', 'unknown')}"
-    except Exception as e:  # pragma: no cover - network variability
-        return False, None, f"{type(e).__name__}: {e}"
-    finally:
-        # We don't use duration here; the caller records it in meta
-        _ = time.time() - start
+async def check_service(service: str) -> tuple[str, bool, str]:
+    ok, msg = check_runtime_log(service)
+    if not ok:
+        evt_ok, evt_msg = check_event_bus(service)
+        ok, msg = evt_ok, evt_msg
+    audit(service, ok, {"details": msg})
+    emit_event("Artisan", "health_check", {"service": service, "ok": ok})
+    return service, ok, msg
 
+# === Federation Health Runner ===
+async def run_all() -> int:
+    services = ["artisan", "orion", "watchtower", "archivist", "librarius", "genesis"]
+    results = []
+    for svc in services:
+        res = await check_service(svc)
+        results.append(res)
 
-def _write_log(payload: Dict[str, Any], filename: str | None = None) -> Path:
-    name = filename or _iso_filename()
-    path = LOG_DIR / name
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    return path
+    table = Table(title=f"Federation Health Report — {utc_now()} UTC")
+    table.add_column("Service", justify="left")
+    table.add_column("Status", justify="center")
+    table.add_column("Details", justify="left")
 
+    unhealthy = []
+    for svc, ok, msg in results:
+        status = "✅ Healthy" if ok else "❌ Unhealthy"
+        if not ok:
+            unhealthy.append(svc)
+        table.add_row(svc.capitalize(), status, msg)
+    console.print(table)
 
-def run_health_check() -> Tuple[int, Dict[str, Any]]:
-    """Execute health check with mirror cascade and structured logging.
+    if unhealthy:
+        console.print(f"[yellow]⚠️ One or more agents require attention: {', '.join(unhealthy)}[/yellow]")
+        return 1
+    console.print("[green]✅ All federation agents healthy[/green]")
+    return 0
 
-    Exit codes:
-      - 0: Success contacting primary/mirror or local stub used
-      - 1: All endpoints unavailable and no stub
-    """
-    urls: List[str] = [
-        os.getenv("DISAGREEMENTS_API_URL", DEFAULT_PRIMARY),
-        DEFAULT_MIRROR,
-    ]
+# === CLI Entrypoint ===
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--service", help="Check a specific service")
+    parser.add_argument("--all", action="store_true", help="Check all services")
+    args = parser.parse_args()
 
-    for url in urls:
-        start = time.time()
-        ok, data, err = _http_get_json(url)
-        duration_ms = int((time.time() - start) * 1000)
-        if ok and data is not None:
-            payload = {
-                "ok": True,
-                "data": data,
-                "error": None,
-                "meta": {
-                    "source": "remote",
-                    "url": url,
-                    "timestamp": _now_iso(),
-                    "duration_ms": duration_ms,
-                },
-            }
-            _write_log(payload)
-            print(f"✅ Service OK at {url}")
-            return 0, payload
-        else:
-            print(f"⚠️ Failed to reach {url}: {err}")
-
-    # Local fallback
-    stub_path = PROJECT_ROOT / "scripts" / "health_stub.json"
-    if stub_path.exists():
-        try:
-            stub = json.loads(stub_path.read_text(encoding="utf-8"))
-        except Exception as e:
-            stub = {"status": "ok", "source": "stub", "error": f"Invalid stub JSON: {e}"}
-        payload = {
-            "ok": True,
-            "data": stub,
-            "error": None,
-            "meta": {
-                "source": "local_stub",
-                "path": str(stub_path.relative_to(PROJECT_ROOT)),
-                "timestamp": _now_iso(),
-            },
-        }
-        _write_log(payload, filename="health_stub.json")
-        print("🧩 Using local stub fallback.")
-        return 0, payload
-
-    print("❌ All endpoints unavailable.")
-    return 1, {"ok": False, "data": {}, "error": "all_endpoints_unavailable", "meta": {"timestamp": _now_iso()}}
-
-
-def main(argv: list[str] | None = None) -> int:
-    # Simple shim: no args currently; future flags could include --log-dir or --url
-    code, _payload = run_health_check()
-    return code
-
+    if args.all:
+        return asyncio.run(run_all())
+    if args.service:
+        svc, ok, msg = asyncio.run(check_service(args.service))
+        console.print(f"{svc.capitalize()} → {'✅ Healthy' if ok else '❌ Unhealthy'} ({msg})")
+        return 0 if ok else 1
+    parser.print_help()
+    return 1
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    raise SystemExit(main())

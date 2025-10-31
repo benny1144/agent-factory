@@ -1,3 +1,0 @@
-{"ok": true, "data": {"event": "gcp_credentials_presence", "path": "C:\\Users\\benny\\IdeaProjects\\agent-factory\\factory_config\\api_keys.env", "present": true}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.835742+00:00", "source": "logs\\telemetry_integration.jsonl"}}
-{"ok": true, "data": {"event": "telemetry_init", "mode": "local_file"}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.836221+00:00", "source": "logs\\telemetry_integration.jsonl"}}
-{"ok": true, "data": {"event": "telemetry_initialized"}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.836598+00:00", "source": "logs\\telemetry_integration.jsonl"}}

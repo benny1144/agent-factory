@@ -142,10 +142,105 @@ def run_loop(dry_run: bool = False) -> None:
         time.sleep(5)
 
 
+def _write_json(path: Path, obj: Dict[str, Any]) -> None:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(obj, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def verify_access() -> Dict[str, Any]:
+    """Verify Orion's read access to repo root and governance directories only.
+
+    Produces governance/audits/orion_activation.json with the verification result.
+    """
+    ensure_dirs()
+    ok = True
+    details: Dict[str, Any] = {"can_list_root": False, "can_list_governance": False}
+    try:
+        _ = [p.name for p in PROJECT_ROOT.iterdir()]
+        details["can_list_root"] = True
+    except Exception as e:
+        ok = False
+        details["root_error"] = f"{type(e).__name__}: {str(e)[:200]}"
+    try:
+        gov = PROJECT_ROOT / "governance"
+        _ = [p.name for p in gov.iterdir()] if gov.exists() else []
+        details["can_list_governance"] = True
+    except Exception as e:
+        ok = False
+        details["governance_error"] = f"{type(e).__name__}: {str(e)[:200]}"
+
+    rec = {"ts": _iso(), "action": "verify_access", "ok": ok, "details": details}
+    _write_json(AUDITS_DIR / "orion_activation.json", rec)
+    _append_bus({"agent": "Orion", "type": "verify_access", "status": "ok" if ok else "error"})
+    print(json.dumps(rec, indent=2))
+    return rec
+
+
+essential_orion_entry = {
+    "agent": "Orion",
+    "role": "Control Plane",
+    "version": "v1.0",
+    "path": "factory_agents/orion_control/main.py",
+    "alignment": "Watchtower",
+    "status": "production",
+}
+
+
+def register_federation(federation: str | None = None) -> Dict[str, Any]:
+    """Register Orion in governance/federation_manifest_v8.json (copy from v7_5 if present)."""
+    v7p = PROJECT_ROOT / "governance" / "federation_manifest_v7_5.json"
+    v8p = PROJECT_ROOT / "governance" / "federation_manifest_v8.json"
+    try:
+        if v7p.exists():
+            data = json.loads(v7p.read_text(encoding="utf-8"))
+        else:
+            data = []
+    except Exception:
+        data = []
+
+    # ensure Orion entry exists
+    found = False
+    for i, rec in enumerate(data if isinstance(data, list) else []):
+        if isinstance(rec, dict) and rec.get("agent") == "Orion":
+            found = True
+            # update path/alignment if missing
+            rec.setdefault("path", essential_orion_entry["path"])  # type: ignore[index]
+            rec.setdefault("alignment", essential_orion_entry["alignment"])  # type: ignore[index]
+    if not found and isinstance(data, list):
+        data.append(essential_orion_entry)
+
+    # Write v8 manifest
+    _write_json(v8p, data)
+    act = {
+        "ts": _iso(),
+        "action": "register",
+        "federation": federation or "unknown",
+        "manifest_v8": str(v8p.relative_to(PROJECT_ROOT)),
+        "ok": True,
+    }
+    _write_json(AUDITS_DIR / "orion_activation.json", act)
+    _append_bus({"agent": "Orion", "type": "register", "status": "ok", "federation": federation or "unknown"})
+    print(json.dumps(act, indent=2))
+    return act
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Orion Bootstrap (headless)")
     parser.add_argument("--dry-run", action="store_true", help="Run a single scan iteration and exit")
+    parser.add_argument("--verify-access", action="store_true", help="Verify Orion filesystem access and write audit record")
+    parser.add_argument("--register", action="store_true", help="Register Orion in federation manifest v8")
+    parser.add_argument("--federation", type=str, default=None, help="Federation label (e.g., genesis)")
     args = parser.parse_args(argv or sys.argv[1:])
+
+    if args.verify_access:
+        verify_access()
+        return 0
+    if args.register:
+        register_federation(args.federation)
+        return 0
 
     run_loop(dry_run=bool(args.dry_run))
     return 0

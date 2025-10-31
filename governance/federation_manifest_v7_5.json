@@ -88,7 +88,8 @@
     "certified_at": "2025-10-30",
     "experimental_modules": [
       {"path": "core/tools/holo_forge_tool.py", "status": "sandboxed"},
-      {"path": "core/routing/model_router.py", "status": "active_governed"}
+      {"path": "core/routing/model_router.py", "status": "active_governed"},
+      {"module_id": "GDPVAL-BENCH", "name": "GDPval Benchmark Suite", "version": "v1.0", "category": "Evaluation::Benchmarking", "entry_point": "benchmarks/run_gdpval_suite.py", "auto_grade_model": "gpt-5-mini", "hitl_integration": true, "status": "active"}
     ]
   }
 ]

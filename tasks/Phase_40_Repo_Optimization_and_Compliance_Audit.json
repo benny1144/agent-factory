@@ -1,0 +1,109 @@
+{
+  "phase_id": 40,
+  "title": "Repository Optimization and Compliance Audit",
+  "assigned_to": "Junie",
+  "status": "pending",
+  "priority": "high",
+  "classification": "Governance:Maintenance",
+  "version": "v7.6.40",
+  "created_at": "2025-10-30T23:58:00Z",
+  "initiated_by": "AgentFactoryExpert",
+  "dependencies": [
+    "Phase_39_Watchtower_Deployment",
+    "Phase_35_Final_Audit_and_Certification"
+  ],
+  "objectives": [
+    "Conduct a full audit and cleanup of the Agent Factory repository under governance protocol.",
+    "Remove redundant, compiled, and temporary artifacts (logs, .pyc, pid files, local venvs).",
+    "Rebuild .gitignore and requirements.txt to reflect the current, active environment.",
+    "Validate that all critical services (Junie, Orion, Watchtower, Archy) remain operational post-cleanup.",
+    "Generate immutable audit records for compliance verification and Watchtower indexing."
+  ],
+  "preconditions": [
+    "Main branch synced with origin/main and all ongoing builds complete.",
+    "No active phase commits in progress (Phase 39.3 must be complete).",
+    "GCP and Secret Manager keys are secured and not exposed.",
+    "Factory governance kernel and compliance daemon running in safe mode."
+  ],
+  "plan": [
+    {
+      "step": "1. Initialize Dry-Run Audit",
+      "command": "python scripts/cleanup_repo_structure.py",
+      "expected_output": "governance/audits/repo_cleanup_report.json created with full inventory of proposed deletions.",
+      "safety_mode": true
+    },
+    {
+      "step": "2. Validate Audit Results",
+      "manual_check": "Junie reviews governance/audits/repo_cleanup_report.json to confirm no critical systems (frontend, factory_agents, governance) are marked for removal.",
+      "hitl_required": true
+    },
+    {
+      "step": "3. Execute Commit-Mode Cleanup",
+      "command": "python scripts/cleanup_repo_structure.py --commit",
+      "expected_output": "All temporary and redundant files deleted safely, .gitignore and requirements.txt updated."
+    },
+    {
+      "step": "4. Post-Cleanup Verification",
+      "command": "python scripts/post_cleanup_verification.py",
+      "optional": true,
+      "expected_output": "No missing dependencies, broken imports, or integrity issues found."
+    },
+    {
+      "step": "5. Audit Signature & Watchtower Event",
+      "commands": [
+        "python scripts/generate_audit_signature.py governance/audits/repo_cleanup_report.json",
+        "watchtower_event --emit cleanup_complete --payload governance/audits/repo_cleanup_report.json"
+      ],
+      "expected_output": "Watchtower receives verification event and indexes cleanup results."
+    },
+    {
+      "step": "6. Commit and Push Changes",
+      "commands": [
+        "git add .",
+        "git commit -m 'Phase 40: Repository optimization and compliance audit (automated)'",
+        "git push origin main"
+      ],
+      "note": "Ensure .gitignore excludes all sensitive config files, especially factory_config/api_keys.yaml and any .env files."
+    }
+  ],
+  "governance_hooks": {
+    "human_firewall": {
+      "review_required": true,
+      "approver": "benny",
+      "checkpoint": "Before executing commit-mode cleanup."
+    },
+    "audit_log_target": "governance/audits/repo_cleanup_report.json",
+    "compliance_signature": "SHA256",
+    "watchtower_trigger": true
+  },
+  "audit_outputs": [
+    "governance/audits/repo_cleanup_report.json",
+    "logs/repo_cleanup_diff.log",
+    "governance/audits/repo_cleanup_signature.json"
+  ],
+  "rollback": {
+    "description": "In case of data loss or erroneous deletions, restore from auto-generated backup.",
+    "backup_path": "governance/audits/repo_cleanup_backup_<timestamp>.zip",
+    "commands": [
+      "git revert HEAD",
+      "python scripts/restore_repo_backup.py governance/audits/repo_cleanup_backup_<timestamp>.zip"
+    ]
+  },
+  "completion_criteria": [
+    "All redundant artifacts successfully removed.",
+    "No service or module breakage detected by post-cleanup verification.",
+    "Audit logs successfully generated, signed, and indexed by Watchtower.",
+    "Governance dashboard reflects compliance status as 'Verified'."
+  ],
+  "post_actions": [
+    "Notify Orion and Watchtower subsystems to rescan repository topology.",
+    "Update federation manifest (governance/federation_manifest_v7_5.json) with new directory structure.",
+    "Trigger lightweight Archy validation sweep to confirm repo coherence."
+  ],
+  "safety_mechanisms": {
+    "auto_backup": true,
+    "dry_run_default": true,
+    "governance_enforced_commit": true
+  },
+  "notes": "This phase institutionalizes repository maintenance within the governance kernel. It enforces compliance, ensures deterministic build environments, and maintains integrity across agent, governance, and frontend subsystems. Execution requires Human Firewall approval."
+}

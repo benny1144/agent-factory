@@ -13,6 +13,7 @@ const genesisLog = path.join(logsDir, 'genesis_activity.jsonl');
 const tasksFromOrion = path.join(repoRoot, 'tasks', 'from_orion');
 const pendingHuman = path.join(repoRoot, 'tasks', 'pending_human');
 const eventBus = path.join(repoRoot, 'governance', 'event_bus.jsonl');
+const govAudit = path.join(repoRoot, 'logs', 'governance', 'orion_audit.jsonl');
 
 // Ensure directories exist
 fs.mkdirSync(logsDir, { recursive: true });
@@ -127,6 +128,38 @@ app.get('/logs/chat/watchtower_room.jsonl', (_req, res) => {
   } catch (e: any) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.send('');
+  }
+});
+
+// Governance audit file endpoints
+app.get('/gov/audit', (_req, res) => {
+  try {
+    fs.mkdirSync(path.dirname(govAudit), { recursive: true });
+    if (!fs.existsSync(govAudit)) fs.writeFileSync(govAudit, '');
+    const text = fs.readFileSync(govAudit, 'utf-8');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(text);
+  } catch (e: any) {
+    res.status(500).json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
+app.get('/gov/audit/status', (_req, res) => {
+  try {
+    const text = fs.existsSync(govAudit) ? fs.readFileSync(govAudit, 'utf-8') : '';
+    const lines = text.split('\n').filter(Boolean);
+    let active = false;
+    if (lines.length) {
+      try {
+        const last = JSON.parse(lines[lines.length - 1]);
+        active = String(last?.telemetry || '').toUpperCase() === 'ACTIVE';
+      } catch {
+        active = false;
+      }
+    }
+    res.json({ ok: true, active });
+  } catch (e: any) {
+    res.status(200).json({ ok: true, active: false });
   }
 });
 

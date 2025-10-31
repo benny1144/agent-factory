@@ -1,0 +1,113 @@
+{
+  "task_id": "Phase_40_2_GDPval_Benchmark_and_Governance_Integration",
+  "title": "Comprehensive GDPval Benchmark Suite & Governance Integration",
+  "assigned_to": "Junie",
+  "supervisor": "AgentFactoryExpert",
+  "phase": 40.2,
+  "status": "pending",
+  "priority": "high",
+  "type": "development",
+  "created_at": "2025-10-31T00:45:00Z",
+  "objectives": [
+    "Integrate GDPval Benchmark system with governance and Watchtower",
+    "Establish HITL-verified evaluation pipeline for all GPT-5 agents",
+    "Enable auto-grading using OpenAI GPT-5 models",
+    "Ensure results are logged under Compliance Kernel for auditing"
+  ],
+  "preconditions": {
+    "repo": "benny1144/agent-factory",
+    "branch": "main",
+    "dependencies": ["CrewAI", "pandas", "openai", "pydantic", "pytest", "rich"],
+    "directories_required": [
+      "benchmarks/",
+      "data/",
+      "results/gdpval/",
+      "logs/"
+    ],
+    "governance_protocol": "Human Firewall Protocol v2.1",
+    "hitl_checkpoint_enabled": true
+  },
+  "plan": {
+    "steps": [
+      "Create /benchmarks/gdpval_adapter.py implementing GDPvalBenchmark class with HITL and auto-grading support.",
+      "Create /benchmarks/run_gdpval_suite.py for batch execution of GDPval benchmark tasks.",
+      "Create /data/gdpval_tasks.json containing 10 curated GDPval benchmark tasks from 9 key industries.",
+      "Integrate hitl_checkpoint() from governance.firewall to enforce human verification on benchmark results.",
+      "Update auto-grading to use model 'gpt-5-mini' for consistency with the GPT-5-only standard.",
+      "Implement /tests/test_gdpval_suite.py for validation of load, run, and grade workflows.",
+      "Extend Watchtower manifest (governance/federation_manifest_v7_5.json) with GDPVAL-BENCH module entry.",
+      "Add benchmark events to Watchtower telemetry: 'benchmark_run_complete'.",
+      "Enable result persistence under /results/gdpval/ and compliance logging under /logs/gdpval_benchmarks.jsonl.",
+      "Ensure compliance kernel captures run metadata, duration, and graded scores."
+    ]
+  },
+  "edits": [
+    {
+      "path": "benchmarks/gdpval_adapter.py",
+      "change": "Implement GDPvalBenchmark and integrate with GPT-5-mini auto-grading and HITL verification."
+    },
+    {
+      "path": "benchmarks/run_gdpval_suite.py",
+      "change": "Add batch runner CLI supporting --agent and --auto flags."
+    },
+    {
+      "path": "data/gdpval_tasks.json",
+      "change": "Include 10 structured GDPval sample tasks covering finance, law, healthcare, education, manufacturing, IT, government, and media sectors."
+    },
+    {
+      "path": "tests/test_gdpval_suite.py",
+      "change": "Add lightweight unit tests to verify benchmark task load and basic run function."
+    },
+    {
+      "path": "governance/federation_manifest_v7_5.json",
+      "change": "Append GDPVAL-BENCH module configuration block for Watchtower tracking."
+    }
+  ],
+  "verification": {
+    "commands": [
+      "python -m benchmarks.run_gdpval_suite --agent genesis",
+      "python -m benchmarks.run_gdpval_suite --agent genesis --auto"
+    ],
+    "validation": [
+      "Check output in results/gdpval/results_<timestamp>.json",
+      "Confirm entries appended to logs/gdpval_benchmarks.jsonl",
+      "Ensure HITL checkpoint triggered via governance.firewall",
+      "Validate Watchtower received 'benchmark_run_complete' event",
+      "Run pytest tests/test_gdpval_suite.py"
+    ]
+  },
+  "governance_integration": {
+    "watchtower_event": "benchmark_run_complete",
+    "compliance_kernel_log": "logs/gdpval_benchmarks.jsonl",
+    "manifest_entry": {
+      "module_id": "GDPVAL-BENCH",
+      "name": "GDPval Benchmark Suite",
+      "version": "v1.0",
+      "category": "Evaluation::Benchmarking",
+      "entry_point": "benchmarks/run_gdpval_suite.py",
+      "auto_grade_model": "gpt-5-mini",
+      "hitl_integration": true,
+      "status": "active"
+    }
+  },
+  "rollback": {
+    "remove_files": [
+      "benchmarks/gdpval_adapter.py",
+      "benchmarks/run_gdpval_suite.py",
+      "data/gdpval_tasks.json",
+      "tests/test_gdpval_suite.py"
+    ],
+    "remove_log_entries_from": [
+      "logs/gdpval_benchmarks.jsonl"
+    ]
+  },
+  "postconditions": {
+    "expected_outputs": [
+      "Rich table summary printed to console after benchmark run.",
+      "JSON results saved to results/gdpval/results_<timestamp>.json.",
+      "Watchtower dashboard displays GDPval Benchmark module metrics.",
+      "Compliance Kernel registers benchmark completion with HITL signature."
+    ]
+  },
+  "notes": "This unified GDPval Benchmark Suite transforms evaluation into a continuous, HITL-supervised governance process for Agent Factory’s GPT-5 ecosystem. Once deployed, results can be visualized in Watchtower’s Governance → Evaluation panel."
+}

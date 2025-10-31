@@ -1,2 +1,0 @@
-{"ok": true, "data": {"event": "service_health", "service": "database", "ok": true, "url": "sqlite:///data/factory.db"}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.806012+00:00", "source": "logs\\infra_health.jsonl"}}
-{"ok": false, "data": {"event": "service_health", "service": "redis", "ok": false}, "error": null, "meta": {"ts": "2025-10-29T06:58:42.806755+00:00", "source": "logs\\infra_health.jsonl"}}
