@@ -18,7 +18,8 @@ coverage.xml
 htmlcov/
 .venv/
 .env
-
+*.env
+factory_config/api_keys.env
 # Local DBs and generated data
 /data/*.sqlite
 /data/*.db
