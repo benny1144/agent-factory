@@ -10,10 +10,12 @@
       npm --prefix frontend/watchtower ci && \
       npm --prefix frontend/watchtower run build
     startCommand: |
-      pip install -r src/requirements.txt && \
+      cd src && \
+      pip install -r requirements.txt && \
       python -m uvicorn agent_factory.console.app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHONPATH
-        value: src
+        value: /opt/render/project/src/src
     healthCheckPath: /health
     autoDeploy: true
+
