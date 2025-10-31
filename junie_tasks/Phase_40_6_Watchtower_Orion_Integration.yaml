@@ -1,0 +1,156 @@
+---
+task_id: Phase_40_6_Watchtower_Orion_Integration
+title: Integrate Watchtower React Frontend and Orion Federation Relay into FastAPI for Render Deployment
+phase: 40.6
+executor: Artisan
+priority: critical
+depends_on:
+  - Phase_39_4_Watchtower_Activation_and_Live_Governance_Relay
+  - Phase_40_5_Federation_Auto_Recovery_and_Stability
+  - Phase_40_Repo_Optimization_and_Compliance_Audit
+
+objectives:
+  - Serve Watchtower React frontend via FastAPI.
+  - Port all Express dev endpoints into production FastAPI routes.
+  - Enable secure Orion ↔ Watchtower real-time federation relay.
+  - Auto-verify federation health on startup.
+  - Emit audit logs for all Watchtower relay actions.
+  - Deploy unified app on Render and validate live dashboard + chat.
+
+implementation_plan:
+  steps:
+    - name: Build Watchtower Frontend
+      actions:
+        - run: npm --prefix frontend/watchtower ci --omit=dev
+        - run: npm --prefix frontend/watchtower run build
+      output: frontend/watchtower/dist/
+
+    - name: Integrate Static Mount + Startup Health
+      actions:
+        - edit: src/agent_factory/console/app.py
+          insert_after: "from fastapi import FastAPI"
+          content: |
+            from fastapi.staticfiles import StaticFiles
+            from agent_factory.utils.heartbeat import ensure_heartbeats
+
+            app.mount(
+                "/dashboard",
+                StaticFiles(directory="frontend/watchtower/dist", html=True),
+                name="watchtower",
+            )
+
+            @app.on_event("startup")
+            async def init_federation_health():
+                try:
+                    await ensure_heartbeats()
+                    print("[Startup] Federation health verified ✅")
+                except Exception as e:
+                    print(f"[Startup] Health init failed: {e}")
+
+    - name: Port Express Endpoints to FastAPI
+      create: src/agent_factory/api/watchtower_endpoints.py
+      content: |
+        from fastapi import APIRouter, Request, Header, HTTPException
+        from fastapi.responses import StreamingResponse, JSONResponse
+        import aiofiles, asyncio, json, os, time
+        from pathlib import Path
+        from agent_factory.utils.paths import PROJECT_ROOT
+
+        router = APIRouter(tags=["watchtower"])
+
+        async def stream_file(path: Path):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            async with aiofiles.open(path, "a+") as f:
+                await f.seek(0)
+            async with aiofiles.open(path, "r", encoding="utf-8") as f:
+                while True:
+                    line = await f.readline()
+                    if not line:
+                        await asyncio.sleep(0.5)
+                        continue
+                    yield f"data: {line.strip()}\n\n"
+
+        async def append_jsonl(path: Path, obj: dict):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            async with aiofiles.open(path, "a", encoding="utf-8") as f:
+                await f.write(json.dumps(obj) + "\n")
+
+        def check_key(x_api_key: str | None):
+            if x_api_key != os.getenv("WATCHTOWER_API_KEY"):
+                raise HTTPException(status_code=403, detail="Forbidden")
+
+        @router.get("/logs/stream")
+        async def logs_stream():
+            log_path = PROJECT_ROOT / "logs" / "federation_events.jsonl"
+            return StreamingResponse(stream_file(log_path), media_type="text/event-stream")
+
+        @router.get("/gov/stream")
+        async def gov_stream():
+            gov_path = PROJECT_ROOT / "governance" / "event_bus.jsonl"
+            return StreamingResponse(stream_file(gov_path), media_type="text/event-stream")
+
+        @router.get("/gov/audit")
+        async def gov_audit():
+            path = PROJECT_ROOT / "governance" / "federation_audit.jsonl"
+            async with aiofiles.open(path, "r") as f:
+                data = await f.read()
+            return JSONResponse({"audit": data.splitlines()[-100:]})
+
+        @router.get("/gov/audit/status")
+        async def gov_audit_status():
+            return JSONResponse({"status": "ACTIVE"})
+
+        @router.post("/orion/send")
+        async def orion_send(req: Request, x_api_key: str | None = Header(None)):
+            check_key(x_api_key)
+            data = await req.json()
+            msg = data.get("message", "")
+            event = {
+                "agent": "watchtower",
+                "type": "relay_send",
+                "message": msg,
+                "timestamp": time.time(),
+            }
+            await append_jsonl(PROJECT_ROOT / "governance" / "event_bus.jsonl", event)
+            await append_jsonl(PROJECT_ROOT / "governance" / "federation_audit.jsonl", event)
+            return JSONResponse({"ok": True, "relay": "orion", "echo": msg})
+
+        @router.get("/pending/list")
+        async def pending_list():
+            tasks_path = PROJECT_ROOT / "tasks" / "pending_human"
+            tasks = [p.name for p in tasks_path.glob("*.json")]
+            return JSONResponse({"pending": tasks})
+
+        @router.post("/orion/approve")
+        async def orion_approve(req: Request, x_api_key: str | None = Header(None)):
+            check_key(x_api_key)
+            data = await req.json()
+            filename = data.get("filename")
+            src = PROJECT_ROOT / "tasks" / "pending_human" / filename
+            dst = PROJECT_ROOT / "tasks" / "approved" / filename
+            if src.exists():
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                src.rename(dst)
+                await append_jsonl(PROJECT_ROOT / "governance" / "federation_audit.jsonl",
+                                   {"event": "approved", "file": filename, "ts": time.time()})
+                return JSONResponse({"ok": True, "file": filename})
+            raise HTTPException(status_code=404, detail="File not found")
+
+        @router.get("/logs/chat/watchtower_room.jsonl")
+        async def watchtower_chat():
+            path = PROJECT_ROOT / "logs" / "chat" / "watchtower_room.jsonl"
+            async with aiofiles.open(path, "r") as f:
+                data = await f.read()
+            return JSONResponse({"chat": data.splitlines()[-100:]})
+
+    - name: Include Router
+      edit: src/agent_factory/console/app.py
+      content: |
+        from agent_factory.api.watchtower_endpoints import router as watchtower_router
+        app.include_router(watchtower_router, prefix="/api")
+
+    - name: Update Render Config
+      create_or_update: render.yaml
+      content: |
+        buildCommand: |
+          pip install -r requirements.

@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 
 try:
     from agent_factory.utils.telemetry import TELEMETRY_DIR, summarize_metrics
@@ -73,6 +74,53 @@ app.include_router(health_router)
 # Mount Prometheus metrics exporter if available
 if make_asgi_app:
     app.mount("/metrics", make_asgi_app())
+
+# Phase 40.6: Watchtower static dashboard mount (if built)
+from pathlib import Path as _P
+_WT_DIST = _P("frontend") / "watchtower" / "dist"
+try:
+    if _WT_DIST.exists():
+        app.mount(
+            "/dashboard",
+            StaticFiles(directory=str(_WT_DIST), html=True),
+            name="watchtower",
+        )
+        print(f"[Watchtower] Mounted static dashboard at /dashboard from {_WT_DIST}")
+    else:
+        @app.get("/dashboard")
+        def _watchtower_placeholder() -> HTMLResponse:  # type: ignore[override]
+            return HTMLResponse("""
+            <html><head><title>Watchtower</title></head>
+            <body style='font-family: system-ui'>
+              <h1>Watchtower Dashboard</h1>
+              <p>Static build not found at <code>frontend/watchtower/dist</code>.</p>
+              <p>Run <code>npm --prefix frontend/watchtower ci --omit=dev && npm --prefix frontend/watchtower run build</code> then redeploy.</p>
+            </body></html>
+            """)
+except Exception as _e:
+    print(f"[Watchtower] Static mount skipped: {_e}")
+
+# Phase 40.6: Include Watchtower API endpoints
+try:
+    from agent_factory.api.watchtower_endpoints import router as watchtower_router
+    app.include_router(watchtower_router, prefix="/api")
+    print("[Watchtower] API endpoints mounted under /api")
+except Exception as _e:
+    print(f"[Watchtower] API router include skipped: {_e}")
+
+# Phase 40.6: Startup federation health verification
+try:
+    from agent_factory.utils.heartbeat import ensure_heartbeats
+
+    @app.on_event("startup")
+    async def _phase_40_6_startup():
+        try:
+            ensure_heartbeats()
+            print("[Startup] Federation health verified ✅")
+        except Exception as e:
+            print(f"[Startup] Health init failed: {e}")
+except Exception as _e:
+    print(f"[Watchtower] Heartbeat import skipped: {_e}")
 
 
 @app.get("/", response_class=PlainTextResponse)

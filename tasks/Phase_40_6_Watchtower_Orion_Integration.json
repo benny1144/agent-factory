@@ -1,0 +1,39 @@
+{
+  "task_id": "Phase_40_6_Watchtower_Orion_Integration",
+  "phase": 40.6,
+  "executor": "Artisan",
+  "priority": "critical",
+  "objectives": [
+    "Serve Watchtower React frontend via FastAPI",
+    "Port Express endpoints into FastAPI routes",
+    "Enable secure Orion ↔ Watchtower relay",
+    "Auto-verify federation health on startup",
+    "Emit audit logs for Watchtower relay actions",
+    "Deploy unified app on Render"
+  ],
+  "dependencies": [
+    "Phase_39_4_Watchtower_Activation_and_Live_Governance_Relay",
+    "Phase_40_5_Federation_Auto_Recovery_and_Stability",
+    "Phase_40_Repo_Optimization_and_Compliance_Audit"
+  ],
+  "verification": {
+    "checks": [
+      "Dashboard loads React UI",
+      "Orion responds via /api/orion/send",
+      "SSE endpoints stream data",
+      "Render logs show startup complete",
+      "Audit file updated with relay events"
+    ]
+  },
+  "rollback": [
+    "Remove StaticFiles mount + router include",
+    "Delete watchtower_endpoints.py",
+    "Revert render.yaml",
+    "Redeploy baseline console"
+  ],
+  "compliance": {
+    "security": "Requires WATCHTOWER_API_KEY env var",
+    "audit_logging": true,
+    "hitl_checkpoint": true
+  }
+}
