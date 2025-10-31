@@ -65,3 +65,7 @@ Thumbs.db
 /junie-bridge/.env
 /junie-bridge/certs/
 factory_config/api_keys.yaml
+
+factory_config/api_keys.env
+
+*.env
