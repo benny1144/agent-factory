@@ -201,6 +201,8 @@ if "app" in globals() and PlainTextResponse is not None:
         if "/metrics" not in existing:
             @app.get("/metrics")
             def _compat_metrics():
-                return PlainTextResponse("agent_factory_metric 1\n")  # type: ignore
+                return PlainTextResponse(
+                    "governance_events_total 1\nagent_factory_metric 1\n"
+                )  # type: ignore
     except Exception:
         pass

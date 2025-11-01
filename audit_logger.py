@@ -8,12 +8,18 @@ def _fmt(tag: str, fields: Dict[str, Any]) -> str:
 
 
 def log_agent_run(agent: str, **fields):
-    print(_fmt("agent_run", {"agent": agent, **fields}), flush=True)
+    line = _fmt("agent_run", {"agent": agent, **fields})
+    print(line, flush=True)
+    return line
 
 
 def log_tool_creation(tool: str, fields: Dict[str, Any] | None = None):
-    print(_fmt("tool_creation", {"tool": tool, **(fields or {})}), flush=True)
+    line = _fmt("tool_creation", {"tool": tool, **(fields or {})})
+    print(line, flush=True)
+    return line
 
 
 def log_knowledge_ingest(source: str, count: int):
-    print(_fmt("knowledge_ingest", {"source": source, "count": count}), flush=True)
+    line = _fmt("knowledge_ingest", {"source": source, "count": count})
+    print(line, flush=True)
+    return line

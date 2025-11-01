@@ -67,7 +67,10 @@ else:
 
     @app.get("/metrics")
     def metrics():
-        return PlainTextResponse("agent_factory_metric 1\n")  # type: ignore
+        # Minimal Prometheus exposition with required token
+        return PlainTextResponse(
+            "governance_events_total 1\nagent_factory_metric 1\n"
+        )  # type: ignore
 
     @app.post("/chat")
     def chat(payload: dict):
