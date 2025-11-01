@@ -1,0 +1,27 @@
+global:
+  audit_write_latency_p95_ms: 150
+  watchtower_event_lag_p95_ms: 500
+  drift_alert_mttr_minutes: 30
+  prod_change_failure_rate_pct: "< 5"
+  rollback_time_p95_minutes: 5
+phase_kpis:
+  phase0_executor_hardening:
+    unhandled_exception_rate_pct: "< 0.5"
+    unit_test_coverage_pct: ">= 80"
+  phase2_identity_manifest:
+    unauthorized_call_block_rate_pct: 100
+    manifest_load_time_ms: "< 50"
+  phase3_compliance_ledger:
+    tamper_detection_coverage_pct: 100
+    verify_runtime_minutes: "< 2"
+  phase4_did_infra:
+    signed_action_rate_pct: 100
+    sig_verify_latency_ms: "< 5"
+  phase5_flow_engine:
+    flow_success_rate_pct: ">= 99"
+    approval_wait_time_p95_minutes: "< 10"
+  phase11_edm:
+    false_positive_rate_pct: "< 3"
+    critical_alert_detection_rate_pct: ">= 99"
+  phase13_watchtower:
+    operator_acknowledge_time_p95_minutes: "< 5"
