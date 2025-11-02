@@ -1,1 +1,22 @@
-{}
+{
+  "nodes": [
+    "research",
+    "charter",
+    "code",
+    "critique"
+  ],
+  "edges": [
+    [
+      "research",
+      "charter"
+    ],
+    [
+      "charter",
+      "code"
+    ],
+    [
+      "code",
+      "critique"
+    ]
+  ]
+}

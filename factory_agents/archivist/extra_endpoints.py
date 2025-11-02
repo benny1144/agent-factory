@@ -80,6 +80,7 @@ def _decode_jwt(token: str) -> Dict[str, Any]:
             _jwt_secret(),
             algorithms=["HS256"],
             options={"require": ["exp", "iat", "nbf"]},
+            audience="archivist",
         )
         return claims
     except jwt.ExpiredSignatureError:

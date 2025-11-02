@@ -1,3 +1,4 @@
 2025-10-26,C:/Users/benny/IdeaProjects/agent-factory/logs/audit_2025-10-26.jsonl
 2025-10-27,C:/Users/benny/IdeaProjects/agent-factory/logs/audit_2025-10-27.jsonl
 2025-10-31,C:/Users/benny/IdeaProjects/agent-factory/logs/audit_2025-10-31.jsonl
+2025-11-01,C:/Users/benny/IdeaProjects/agent-factory/logs/audit_2025-11-01.jsonl

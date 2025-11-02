@@ -55,3 +55,9 @@ phase-40.9:
 
 verify-phase-40.9:
 	@python scripts/verify_phase_40_9.py
+
+
+checkpoint:
+	python update_phase_checkpoint.py --file governance/memory_state.yaml --complete $(C) --next $(N) --next-name "$(NN)" --status "$(S)" --summary "$(MSG)"
+# Usage:
+#   make checkpoint C=15 N=16 NN="Einstein — Asymmetric Gravity Well" S="In progress" MSG="Phase 15 completed; moving to 16."

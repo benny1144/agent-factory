@@ -1,0 +1,7 @@
+codex:
+  provider: "openai"
+  model: "gpt-5-codex"
+  sandbox_mode: true
+  audit_log: "1_GOVERNANCE_AND_COMPLIANCE/ledger/"
+  risk_tier_default: "MODERATE"
+  max_parallel_jobs: 5
